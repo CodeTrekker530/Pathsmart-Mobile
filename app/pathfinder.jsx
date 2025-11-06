@@ -175,6 +175,7 @@ export default function HomeScreen() {
         <View style={customStyles.listHeader}>
           <TouchableOpacity 
             onPress={() => setShowProductList(!showProductList)}
+            style={{ flexDirection: 'row', alignItems: 'center' }}
           >
             <Text style={customStyles.sectionTitle}>
               Shopping List ({shoppingList.length})
@@ -182,29 +183,45 @@ export default function HomeScreen() {
             <Ionicons 
               name={showProductList ? "chevron-up" : "chevron-down"} 
               size={24} 
-              color="#333" 
+              color="#333"
+              style={{ marginLeft: 8 }}
             />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              customStyles.optimizeButton,
-              optimizeEnabled && customStyles.optimizeButtonActive
-            ]}
-            onPress={() => setOptimizeEnabled(!optimizeEnabled)}
-          >
-            <Ionicons 
-              name="map" 
-              size={20} 
-              color={optimizeEnabled ? "white" : "#0766AD"} 
-            />
-            <Text style={[
-              customStyles.optimizeButtonText,
-              optimizeEnabled && customStyles.optimizeButtonTextActive
-            ]}>
-              Optimize
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+              style={[
+                customStyles.optimizeButton,
+                optimizeEnabled && customStyles.optimizeButtonActive
+              ]}
+              onPress={() => setOptimizeEnabled(!optimizeEnabled)}
+            >
+              <Ionicons 
+                name="map" 
+                size={20} 
+                color={optimizeEnabled ? "white" : "#0766AD"} 
+              />
+              <Text style={[
+                customStyles.optimizeButtonText,
+                optimizeEnabled && customStyles.optimizeButtonTextActive
+              ]}>
+                Optimize
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{ marginLeft: 8, padding: 4 }}
+              onMouseEnter={(e) => {
+                e.currentTarget.title = "Arranges your shopping list for efficient shopping";
+              }}
+            >
+              <Ionicons 
+                name="help-circle-outline" 
+                size={20} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {showProductList && (
@@ -505,7 +522,8 @@ const customStyles = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginTop: 10,
+
   },
   optimizeButton: {
     flexDirection: 'row',

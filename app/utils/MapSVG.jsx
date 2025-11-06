@@ -7,8 +7,7 @@ import saveData from './saveData.json'; // Add this line to import saveData
 const HIGHLIGHT_COLOR = '#609966';
 const DEFAULT_COLOR = '#D9D9D9';
 const START_POINT_COLOR = '#ff0000ff';
-const SELECTED_START_COLOR = '#00ff00';
-const DESTINATION_COLOR = '#0059FF';
+const SELECTED_START_COLOR = '#0059FF';
 const START_POINT_RADIUS = 20;
 
 const MapSVG = ({ 
@@ -100,9 +99,10 @@ const MapSVG = ({
     <Circle
       cx={x}
       cy={y}
-      r={START_POINT_RADIUS}
-      fill={DESTINATION_COLOR}
-      opacity={0.7}
+      r={16}
+      fill="white"
+      stroke="#0059FF"
+      strokeWidth="5"
     />
   );
 
@@ -147,19 +147,6 @@ const MapSVG = ({
         
         {/* Location/Start icon */}
         <G pointerEvents="none">
-          {/* Outer pin shape */}
-          <Path
-            d={`
-              M ${cx} ${cy - 8}
-              A 6 6 0 0 1 ${cx + 6} ${cy - 2}
-              L ${cx} ${cy + 6}
-              L ${cx - 6} ${cy - 2}
-              A 6 6 0 0 1 ${cx} ${cy - 8}
-            `}
-            fill="white"
-            stroke="white"
-            strokeWidth="1"
-          />
           {/* Inner dot */}
           <Circle
             cx={cx}
@@ -429,19 +416,6 @@ const MapSVG = ({
         <path id="Polygon 24" d="M341.371 120.485L363.783 128.952L385.189 141.397L402.613 159.32L416.547 178.728L424.514 203.624L428.496 226.519L426.507 246.405L422.02 262.859L416.708 279.277L365.141 251.774L369.46 241.697L369.487 241.634L369.496 241.564L371.005 229.997L370.995 229.93L368.995 215.93L368.986 215.865L368.961 215.806L364.961 206.306L364.944 206.268L364.923 206.233L358.923 196.733L358.893 196.686L351.828 189.621L351.8 189.6L343.8 183.6L343.747 183.561L343.686 183.536L333.686 179.536L333.641 179.518L333.594 179.509L323.094 177.509L323.047 177.5H312.433L301.368 180.518L301.301 180.536L301.241 180.572L246.146 213.827L213.205 165.646L280.688 122.973L315.01 116.506L341.371 120.485Z" stroke="black" fill="none"/>
         <path id="Polygon 26" d="M1437.5 331.902L1437.46 331.812L1429.96 313.312L1429.94 313.247L1429.89 313.192L1417.39 297.192L1417.36 297.145L1417.31 297.106L1403.31 286.106L1403.21 286.033L1385.6 282.51L1385.55 282.5H1363.9L1363.81 282.536L1341.24 291.565L1341.18 291.616L1323.18 306.616L1323.13 306.657L1323.09 306.709L1310.59 324.209L1310.56 324.25L1310.54 324.295L1300.5 346.665V283.268L1316.76 272.428L1335.73 261.944L1357.21 251.953L1358.12 251.529L1357.23 251.059L1331.79 237.587L1313.87 221.663L1300.5 202.84V141.038L1312.04 169.189L1312.05 169.219L1312.06 169.246L1318.56 180.746L1318.58 180.778L1318.61 180.809L1327.61 192.309L1327.64 192.352L1327.68 192.386L1336.18 199.386L1336.2 199.404L1336.23 199.419L1346.23 205.919L1346.25 205.938L1346.29 205.951L1356.79 210.951L1356.83 210.971L1367.87 213.982L1367.9 213.992L1367.94 213.997L1393.61 216.993L1416.33 222.473L1438.24 233.431L1454.68 244.89L1467.14 256.347L1478.09 269.292L1489.05 287.718L1496.01 306.623L1499.5 328.541V343.991L1437.5 343.008V331.902Z" stroke="black" fill="none"/>
 
-        {/* Path Lines */}
-        {path.map((nodeId, i) =>
-          i < path.length - 1 ? (
-            <PathLine 
-              key={i} 
-              from={nodeId} 
-              to={path[i + 1]} 
-              nodes={nodes}
-              isLastNode={i === path.length - 2}
-            />
-          ) : null
-        )}
-
         {/* Start Points */}
         <StartPoint id={14} cx={628} cy={568}/>
         <StartPoint id={25} cx={552} cy={112}/>
@@ -456,6 +430,19 @@ const MapSVG = ({
 
         {/* Custom Start Point Indicator */}
         {customStartNode && <CustomStartPoint nodeId={customStartNode} />}
+
+        {/* Path Lines - Rendered last to appear on top */}
+        {path.map((nodeId, i) =>
+          i < path.length - 1 ? (
+            <PathLine 
+              key={i} 
+              from={nodeId} 
+              to={path[i + 1]} 
+              nodes={nodes}
+              isLastNode={i === path.length - 2}
+            />
+          ) : null
+        )}
       </Svg>
     </div>
   );
