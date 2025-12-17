@@ -1,38 +1,18 @@
+
+
 {
   "products": {
-    "1": { "name": "Banana", "category": "Fruits" },
-    "2": { "name": "Tilapia", "category": "Seafood" },
-    "3": { "name": "Pork", "category": "Meat" },
-    "4": { "name": "Eggplant", "category": "Vegetables" },
-    "5": { "name": "Brown Sugar", "category": "Groceries" },
-    "6": { "name": "Tuna", "category": "Seafood" },
-    "7": { "name": "Tomato", "category": "Vegetables" },
-    "8": { "name": "Rice (Sinandomeng)", "category": "Grains" },
-    "9": { "name": "Cooking Oil", "category": "Groceries" },
-    "10": { "name": "Carrot", "category": "Fruits" },
-    "11": { "name": "Chicken", "category": "Meat" },
-    "12": { "name": "Onion", "category": "Vegetables" },
-    "13": { "name": "Garlic", "category": "Vegetables" },
-    "14": { "name": "Fish Sauce", "category": "Condiments" },
-    "15": { "name": "Soy Sauce", "category": "Condiments" },
-    "16": { "name": "Ginger", "category": "Vegetables" },
-    "17": { "name": "Beef", "category": "Meat" },
-    "18": { "name": "Shrimp", "category": "Seafood" },
-    "19": { "name": "Crab", "category": "Seafood" },
-    "20": { "name": "Mussels", "category": "Seafood" },
-    "21": { "name": "Apple", "category": "Fruits" },
-    "22": { "name": "Orange", "category": "Fruits" },
-    "23": { "name": "Potato", "category": "Vegetables" },
-    "24": { "name": "Salt", "category": "Condiments" },
-    "25": { "name": "Black Pepper", "category": "Condiments" },
-    "26": { "name": "Vinegar", "category": "Condiments" },
-    "27": { "name": "Cabbage", "category": "Vegetables" },
-    "28": { "name": "Lettuce", "category": "Vegetables" },
-    "29": { "name": "Bell Pepper", "category": "Vegetables" },
-    "30": { "name": "Corn", "category": "Vegetables" },
-    "31": { "name": "Haircut", "category": "Services" },
-    "32": { "name": "Cobbler", "category": "Services" },
-    "33": { "name": "Tailoring", "category": "Services" }
+    "1": { "name": "Bread", "category": "Bakery" },
+    "2": { "name": "Rice", "category": "Grains" },
+    "3": { "name": "Cobbler (Shoe Repair)", "category": "Services" },
+    "4": { "name": "Haircut (Service)", "category": "Services" },
+    "5": { "name": "Broom", "category": "Household" },
+    "6": { "name": "Eggplant", "category": "Vegetables" },
+    "7": { "name": "Onion", "category": "Vegetables" },
+    "8": { "name": "Garlic", "category": "Vegetables" },
+    "9": { "name": "Ginger", "category": "Vegetables" },
+    "10": { "name": "Banana", "category": "Fruits" },
+    "11": { "name": "Apple", "category": "Fruits" }
   },
 
   "sections": {
@@ -70,345 +50,345 @@
 
   "stalls": {
     "1": {
-      "name": "Fresh Veggies 1",
+      "name": "Grain Stall 1",
       "nodes": [1],
-      "products": [4, 7, 12, 13, 16],
+      "products": [2],
       "pathNode": [33, 17]
     },
     "2": {
-      "name": "Seafood Corner 1",
+      "name": "Bakery 1",
       "nodes": [2],
-      "products": [2, 18, 19, 20],
+      "products": [1],
       "pathNode": [15, 16]
     },
     "3": {
-      "name": "Meat Shop 1",
+      "name": "Vegetable Stall 3",
       "nodes": [3],
-      "products": [3, 11, 17],
+      "products": [6, 7, 8, 9],
       "pathNode": [2, 9]
     },
     "4": {
-      "name": "Rice & Grains 1",
+      "name": "Grain Stall 2",
       "nodes": [4],
-      "products": [8],
+      "products": [2],
       "pathNode": [21, 31]
     },
     "5": {
-      "name": "Fresh Veggies 2",
+      "name": "Vegetable Stall 5",
       "nodes": [5],
-      "products": [23, 27, 28, 29],
+      "products": [6, 7, 8, 9],
       "pathNode": [23]
     },
     "6": {
-      "name": "Seafood Corner 2",
+      "name": "Vegetable Stall 6",
       "nodes": [6],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [25]
     },
     "7": {
-      "name": "Meat Shop 2",
+      "name": "Bakery 2",
       "nodes": [7],
-      "products": [3, 11],
+      "products": [1],
       "pathNode": [56, 55]
     },
     "8": {
-      "name": "Condiments Store 1",
+      "name": "Bakery 3",
       "nodes": [8],
-      "products": [14, 15, 24, 25, 26],
-      "pathNode": [40,87]
+      "products": [1],
+      "pathNode": [40, 87]
     },
     "9": {
-      "name": "Fresh Fruits 1",
+      "name": "Fruit Stall 1",
       "nodes": [9],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [115, 111]
     },
     "10": {
-      "name": "Fresh Veggies 3",
+      "name": "Vegetable Stall 10",
       "nodes": [10],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [71, 44]
     },
     "11": {
-      "name": "Fresh Fruits 2",
+      "name": "Fruit Stall 2",
       "nodes": [11],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [221, 109]
     },
     "12": {
-      "name": "Condiments Store 2",
+      "name": "Household Supplies 2",
       "nodes": [12],
-      "products": [14, 15, 24, 25, 26],
+      "products": [5],
       "pathNode": [121, 215]
     },
     "13": {
-      "name": "Rice & Grains 2",
+      "name": "Grain & Bakery Stall 2",
       "nodes": [13],
-      "products": [8],
+      "products": [2],
       "pathNode": [108, 97]
     },
     "14": {
-      "name": "Fresh Veggies 4",
+      "name": "Vegetable Stall 14",
       "nodes": [14],
-      "products": [23, 27, 28, 29],
+      "products": [6, 7, 8, 9],
       "pathNode": [105, 100]
     },
     "15": {
-      "name": "Seafood Corner 3",
+      "name": "Vegetable Stall 15",
       "nodes": [15],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [100, 130]
     },
     "16": {
-      "name": "Meat Shop 3",
+      "name": "Vegetable Stall 16",
       "nodes": [16],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [130, 129]
     },
     "17": {
-      "name": "Fresh Fruits 3",
+      "name": "Fruit Stall 3",
       "nodes": [17],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [51, 129]
     },
     "18": {
-      "name": "Fresh Veggies 5",
+      "name": "Vegetable Stall 18",
       "nodes": [18],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [64, 50]
     },
     "19": {
-      "name": "Seafood Corner 4",
+      "name": "Vegetable Stall 19",
       "nodes": [19],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [151, 135]
     },
     "20": {
-      "name": "Meat Shop 4",
+      "name": "Vegetable Stall 20",
       "nodes": [20],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [154, 137]
     },
     "21": {
-      "name": "Fresh Fruits 4",
+      "name": "Fruit Stall 4",
       "nodes": [21],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [139, 160]
     },
     "22": {
-      "name": "Fresh Veggies 6",
+      "name": "Vegetable Stall 22",
       "nodes": [22],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [162, 141]
     },
     "23": {
-      "name": "Seafood Corner 5",
+      "name": "Vegetable Stall 23",
       "nodes": [23],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [143, 158]
     },
     "24": {
-      "name": "Meat Shop 5",
+      "name": "Vegetable Stall 24",
       "nodes": [24],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [168, 145]
     },
     "25": {
-      "name": "Fresh Fruits 5",
+      "name": "Fruit Stall 5",
       "nodes": [25],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [170, 147]
     },
     "26": {
-      "name": "Fresh Veggies 7",
+      "name": "Vegetable Stall 26",
       "nodes": [26],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [172, 149]
     },
     "27": {
-      "name": "Seafood Corner 6",
+      "name": "Vegetable Stall 27",
       "nodes": [27],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [172]
     },
     "28": {
-      "name": "Meat Shop 6",
+      "name": "Vegetable Stall 28",
       "nodes": [28],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [170]
     },
     "29": {
-      "name": "Fresh Fruits 6",
+      "name": "Fruit Stall 6",
       "nodes": [29],
-      "products": [1, 10, 21, 22],
+      "products": [1],
       "pathNode": [195]
     },
     "30": {
-      "name": "Fresh Veggies 8",
+      "name": "Vegetable Stall 30",
       "nodes": [30],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [199]
     },
     "31": {
-      "name": "Seafood Corner 7",
+      "name": "Vegetable Stall 31",
       "nodes": [31],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [181]
     },
     "32": {
-      "name": "Meat Shop 7",
+      "name": "Vegetable Stall 32",
       "nodes": [32],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [202, 201]
     },
     "33": {
-      "name": "Fresh Fruits 7",
+      "name": "Fruit Stall 7",
       "nodes": [33],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [201, 208]
     },
     "34": {
-      "name": "Fresh Veggies 9",
+      "name": "Vegetable Stall 34",
       "nodes": [34],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [187]
     },
     "35": {
-      "name": "Seafood Corner 8",
+      "name": "Vegetable Stall 35",
       "nodes": [35],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [191]
     },
     "36": {
-      "name": "Meat Shop 8",
+      "name": "Vegetable Stall 36",
       "nodes": [36],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [191]
     },
     "37": {
-      "name": "Fresh Fruits 8",
+      "name": "Fruit Stall 8",
       "nodes": [37],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [128, 127]
     },
     "38": {
-      "name": "Fresh Veggies 10",
+      "name": "Vegetable Stall 38",
       "nodes": [38],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [127, 126]
     },
     "39": {
-      "name": "Seafood Corner 9",
+      "name": "Vegetable Stall 39",
       "nodes": [39],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [124, 125]
     },
     "40": {
-      "name": "Meat Shop 9",
+      "name": "Vegetable Stall 40",
       "nodes": [40],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [81, 80]
     },
     "41": {
-      "name": "Fresh Fruits 9",
+      "name": "Fruit Stall 9",
       "nodes": [41],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [86, 67]
     },
     "42": {
-      "name": "Fresh Veggies 11",
+      "name": "Vegetable Stall 42",
       "nodes": [42],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [97, 99]
     },
     "43": {
-      "name": "Seafood Corner 10",
+      "name": "Vegetable Stall 43",
       "nodes": [43],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [97]
     },
     "44": {
-      "name": "Meat Shop 10",
+      "name": "Vegetable Stall 44",
       "nodes": [44],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [9, 12]
     },
     "45": {
-      "name": "Fresh Fruits 10",
+      "name": "Fruit Stall 10",
       "nodes": [45],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [1]
     },
     "46": {
-      "name": "Fresh Veggies 12",
+      "name": "Vegetable Stall 46",
       "nodes": [46],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [217, 95]
     },
     "47": {
-      "name": "Seafood Corner 11",
+      "name": "Vegetable Stall 47",
       "nodes": [47],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [109, 91]
     },
     "48": {
-      "name": "Meat Shop 11",
+      "name": "Vegetable Stall 48",
       "nodes": [48],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [92, 73]
     },
     "49": {
-      "name": "Fresh Fruits 11",
+      "name": "Fruit Stall 11",
       "nodes": [49],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [85, 69]
     },
     "50": {
-      "name": "Fresh Veggies 13",
+      "name": "Vegetable Stall 50",
       "nodes": [50],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [92, 91]
     },
     "51": {
-      "name": "Seafood Corner 12",
+      "name": "Vegetable Stall 51",
       "nodes": [51],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [117, 123]
     },
     "52": {
-      "name": "Meat Shop 12",
+      "name": "Vegetable Stall 52",
       "nodes": [52],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": [26]
     },
     "53": {
-      "name": "Fresh Fruits 12",
+      "name": "Fruit Stall 12",
       "nodes": [53],
-      "products": [1, 10, 21, 22],
+      "products": [10, 11],
       "pathNode": [33, 35]
     },
     "54": {
-      "name": "Fresh Veggies 14",
+      "name": "Vegetable Stall 54",
       "nodes": [54],
-      "products": [4, 7, 27],
+      "products": [6, 7, 8, 9],
       "pathNode": [27, 30]
     },
     "55": {
-      "name": "Seafood Corner 13",
+      "name": "Vegetable Stall 55",
       "nodes": [55],
-      "products": [2, 6, 18],
+      "products": [6, 7, 8, 9],
       "pathNode": [71]
     },
     "56": {
-      "name": "Meat Shop 13",
+      "name": "Vegetable Stall 56",
       "nodes": [56],
-      "products": [3, 11],
+      "products": [6, 7, 8, 9],
       "pathNode": []
     },
     "57": {
       "name": "Services Hub",
       "nodes": [57],
-      "products": [31, 32, 33],
+      "products": [3, 4],
       "pathNode": [131]
     }
   }

@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import { SelectionProvider } from "./context/SelectionContext"; // adjust path as needed
-import { AuthProvider } from "./context/AuthContext";
 
 import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
@@ -38,10 +37,8 @@ export default function Layout() {
   }
 
   return (
-    <AuthProvider>
-      <SelectionProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </SelectionProvider>
-    </AuthProvider>
+    <SelectionProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SelectionProvider>
   );
 }

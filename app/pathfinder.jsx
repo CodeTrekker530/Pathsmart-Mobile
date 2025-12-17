@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useRef, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ScrollView,
   Image,
@@ -8,6 +9,9 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
+  Animated,
+  PanResponder,
+  Modal,
 } from 'react-native';
 import styles from './assets/Styles/Maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,12 +19,12 @@ import { useRouter } from 'expo-router';
 import MapSVG from './utils/MapSVG';
 import { useSelection } from './context/SelectionContext'; 
 import SearchBar from "./components/searchBar";
-import { LinearGradient } from "expo-linear-gradient";
+import Config from './config';
 
 const window = Dimensions.get('window');
 
 export default function HomeScreen() {
-  const { selectedItem, setSelectedItem } = useSelection();
+  const { selectedItem } = useSelection();
   const [showProductList, setShowProductList] = useState(false);
   const [showQualityGuide, setShowQualityGuide] = useState(true);
   const [selectedFloor, setSelectedFloor] = useState(1);
@@ -36,46 +40,56 @@ export default function HomeScreen() {
   const [previousEndNodes, setPreviousEndNodes] = useState(new Set());
   const [excludedEndNodes, setExcludedEndNodes] = useState(new Set());
   const [optimizeEnabled, setOptimizeEnabled] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const drawY = useRef(new Animated.Value(1)).current;
   console.log('[Map.js] selectedItem:', selectedItem);
   const router = useRouter();
 
-  // Load shopping list on mount
+  // Load shopping list on mount (AsyncStorage)
   useEffect(() => {
-    try {
-      const savedList = localStorage.getItem('shoppingList');
-      if (savedList) {
-        const parsedList = JSON.parse(savedList);
-        setShoppingList(parsedList);
-        console.log('Loaded shopping list:', parsedList); // Debug log
+    const loadShoppingList = async () => {
+      try {
+        const savedList = await AsyncStorage.getItem('shoppingList');
+        if (savedList) {
+          const parsedList = JSON.parse(savedList);
+          setShoppingList(parsedList);
+          console.log('Loaded shopping list:', parsedList); // Debug log
+        }
+      } catch (error) {
+        console.error('Error loading shopping list:', error);
       }
-    } catch (error) {
-      console.error('Error loading shopping list:', error);
-    }
+    };
+
+    loadShoppingList();
   }, []);
 
   // Add this function to reset pathfinding state
   const resetPathfinding = async () => {
     try {
-      const response = await fetch('http://localhost:5000/findpath', {
+      const response = await fetch(`${Config.apiUrl}/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          reset: true
+          reset: true,
         }),
       });
-      
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+
       // Clear local state
       setPath([]);
       setStartNodeId(null);
       setCurrentStallId(null);
       setExcludedEndNodes(new Set());
-      
     } catch (error) {
       console.error('Error resetting pathfinding:', error);
+      // Silently fail - just clear local state
+      setPath([]);
+      setStartNodeId(null);
+      setCurrentStallId(null);
+      setExcludedEndNodes(new Set());
     }
   };
 
@@ -93,9 +107,9 @@ export default function HomeScreen() {
   // Update navigation handlers
   const updatePathForProduct = async (productId) => {
     if (!startNodeId) return;
-    
+
     try {
-      const response = await fetch('http://localhost:5000/findpath', {
+      const response = await fetch(`${Config.apiUrl}/findpath`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,13 +119,15 @@ export default function HomeScreen() {
           product_id: parseInt(productId),
         }),
       });
-      
+
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       console.log('Received new path:', data.path);
       setPath(data.path);
     } catch (error) {
       console.error('Error updating path:', error);
+      // Silently fail - keep existing path or show empty path
+      setPath([]);
     }
   };
 
@@ -269,9 +285,9 @@ export default function HomeScreen() {
   useEffect(() => {
     const updatePath = async () => {
       if (!startNodeId) return;
-      
+
       try {
-        const response = await fetch('http://localhost:5000/findpath', {
+        const response = await fetch(`${Config.apiUrl}/findpath`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -282,13 +298,13 @@ export default function HomeScreen() {
             current_index: currentItemIndex,
             current_stall_id: currentStallId,
             excluded_end_nodes: Array.from(excludedEndNodes),
-            optimize: optimizeEnabled  // Add optimize flag
+            optimize: optimizeEnabled,
           }),
         });
-        
+
         if (!response.ok) {
           if (response.status === 404) {
-            alert('No more stores available for this product');
+            console.warn('No more stores available for this product');
             return;
           }
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -305,36 +321,65 @@ export default function HomeScreen() {
         }
       } catch (error) {
         console.error('Error updating path:', error);
+        // Silently fail - app can still function without backend
+        setPath([]);
       }
     };
 
     updatePath();
-  }, [startNodeId, currentItemIndex, shoppingList?.length]); // excludedEndNodes not in dependencies
+  }, [startNodeId, currentItemIndex, shoppingList, currentStallId, excludedEndNodes, optimizeEnabled]);
+
+  // Drawer animation handlers
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dy) > 5;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (gestureState.dy > 0) {
+          drawY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 80) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      },
+    })
+  ).current;
+
+  const openDrawer = () => {
+    Animated.timing(drawY, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    setDrawerVisible(true);
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawY, {
+      toValue: Dimensions.get('window').height,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      setDrawerVisible(false);
+    });
+  };
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Top HUD */}
-      <LinearGradient
-        colors={["#0766AD", "#BCE2BD"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
-        {/* Logo */}
-        <Image
-          source={require("./assets/logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.logo_name}>PathSmart</Text>
-        <SearchBar />
-        <TouchableOpacity 
-          style={styles.loginButton}
-          onPress={() => { router.push("/screens/loginScreen"); }}>
-          <Text style={{ fontWeight: "600", color: "#0766AD" }}>Login</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+      {/* Top HUD with SearchBar */}
+      <View style={customStyles.topHUD}>
+        <View style={customStyles.hudSearchBar}>
+          <SearchBar />
+        </View>
+      </View>
       
-      {/* Main Content: Map + Sidebar */}
+      {/* Main Content: Map only */}
       <View style={customStyles.mainContainer}>
         {/* Map Container */}
         <View style={customStyles.mapWrapper}>
@@ -374,11 +419,19 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Open Drawer Button - Bottom Right */}
+          <TouchableOpacity
+            style={customStyles.openDrawerButton}
+            onPress={openDrawer}
+          >
+            <Ionicons name="chevron-up" size={28} color="white" />
+          </TouchableOpacity>
+
           <ScrollView
             style={customStyles.scrollView}
             contentContainerStyle={{ flexGrow: 1 }}
-            maximumZoomScale={4}
-            minimumZoomScale={1}
+            maximumZoomScale={6}
+            minimumZoomScale={2}
             bounces={false}
             pinchGestureEnabled={true}
             horizontal
@@ -386,8 +439,8 @@ export default function HomeScreen() {
           >
             <View style={styles.mapContainer}>
               <MapSVG 
-                width={window.width * 3} 
-                height={window.height * 3}
+                width={window.width * 5} 
+                height={window.height * 5}
                 selectedItem={shoppingList[currentItemIndex]}
                 isLocationToolActive={isLocationToolActive}
                 fromShoppingList={fromShoppingList}
@@ -403,146 +456,164 @@ export default function HomeScreen() {
             </View>
           </ScrollView>
         </View>
+      </View>
 
-        {/* Right Sidebar - Now Scrollable */}
-        <ScrollView 
-          style={customStyles.sidebar}
-          showsVerticalScrollIndicator={true}
-          bounces={false}
+      {/* Bottom Drawer Modal */}
+      <Modal
+        visible={drawerVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeDrawer}
+      >
+        <TouchableOpacity
+          style={customStyles.drawerOverlay}
+          activeOpacity={1}
+          onPress={closeDrawer}
+        />
+        <Animated.View
+          style={[
+            customStyles.drawer,
+            {
+              transform: [{ translateY: drawY }],
+            },
+          ]}
+          {...panResponder.panHandlers}
         >
-          <View style={customStyles.sidebarContent}>
-            {/* Quality Guide Accordion - Open by Default */}
-            <View>
-              <TouchableOpacity 
-                onPress={() => setShowQualityGuide(!showQualityGuide)}
-              >
-                <Text style={customStyles.sectionTitle}>Quality Guide</Text>
-                <Ionicons 
-                  name={showQualityGuide ? "chevron-up" : "chevron-down"} 
-                  size={24} 
-                  color="#333" 
-                />
-              </TouchableOpacity>
-              
-              {showQualityGuide && (
-                <View>
-                  <View style={customStyles.productImageContainer}>
-                    {selectedItem ? (
-                      <Image 
-                        source={{ uri: selectedItem.image || 'https://via.placeholder.com/150' }}
-                        style={customStyles.productImage}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <View style={customStyles.placeholderImage}>
-                        <Ionicons name="image-outline" size={50} color="#ccc" />
-                      </View>
-                    )}
-                  </View>
-                  
-                  <View style={customStyles.qualityGuide}>
-                    <Text style={customStyles.guideTitle}>Quality Tips:</Text>
-                    <Text style={customStyles.guideText}>
-                      • Check for freshness and expiration dates{'\n'}
-                      • Look for organic certifications{'\n'}
-                      • Inspect packaging for damage{'\n'}
-                      • Compare prices between stores
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
+          {/* Drawer Handle */}
+          <View style={customStyles.drawerHandle}>
+            <View style={customStyles.drawerHandleBar} />
+          </View>
 
-                <View>
-                  {/* Product Navigation */}
-                  <View style={customStyles.productNav}>
-                    <TouchableOpacity 
-                      style={[
-                        customStyles.navButton,
-                        currentItemIndex === 0 && customStyles.navButtonDisabled
-                      ]}
-                      onPress={handlePrevious}
-                      disabled={currentItemIndex === 0}
-                    >
-                      <Ionicons name="chevron-back" size={24} color="#0766AD" />
-                    </TouchableOpacity>
-                    
-                    <View style={customStyles.productCounter}>
-                      <Text style={customStyles.counterText}>
-                        {shoppingList.length > 0 ? `${currentItemIndex + 1} / ${shoppingList.length}` : '0 / 0'}
-                      </Text>
+          {/* Drawer Content */}
+          <ScrollView
+            style={customStyles.drawerContent}
+            showsVerticalScrollIndicator={true}
+            bounces={false}
+          >
+            <View style={customStyles.drawerInnerContent}>
+              {/* Quality Guide Accordion - Open by Default */}
+              <View>
+                <TouchableOpacity 
+                  onPress={() => setShowQualityGuide(!showQualityGuide)}
+                  style={customStyles.drawerSection}
+                >
+                  <Text style={customStyles.sectionTitle}>Quality Guide</Text>
+                  <Ionicons 
+                    name={showQualityGuide ? "chevron-up" : "chevron-down"} 
+                    size={24} 
+                    color="#333" 
+                  />
+                </TouchableOpacity>
+                
+                {showQualityGuide && (
+                  <View>
+                    <View style={customStyles.productImageContainer}>
+                      {selectedItem ? (
+                        <Image 
+                          source={{ uri: selectedItem.image || 'https://via.placeholder.com/150' }}
+                          style={customStyles.productImage}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <View style={customStyles.placeholderImage}>
+                          <Ionicons name="image-outline" size={50} color="#ccc" />
+                        </View>
+                      )}
                     </View>
                     
-                    <TouchableOpacity 
-                      style={[
-                        customStyles.navButton,
-                        currentItemIndex === shoppingList.length - 1 && customStyles.navButtonDisabled
-                      ]}
-                      onPress={handleNext}
-                      disabled={currentItemIndex === shoppingList.length - 1}
-                    >
-                      <Ionicons name="chevron-forward" size={24} color="#0766AD" />
-                    </TouchableOpacity>
+                    <View style={customStyles.qualityGuide}>
+                      <Text style={customStyles.guideTitle}>Quality Tips:</Text>
+                      <Text style={customStyles.guideText}>
+                        • Check for freshness and expiration dates{'\n'}
+                        • Look for organic certifications{'\n'}
+                        • Inspect packaging for damage{'\n'}
+                        • Compare prices between stores
+                      </Text>
+                    </View>
                   </View>
+                )}
+              </View>
 
-                  {/* Store Buttons Container */}
-                  <View style={customStyles.storeButtonsContainer}>
-                    <TouchableOpacity 
-                      style={customStyles.nextStoreButton}
-                      onPress={handleTryNextStore}  // Add this line
-                    >
-                      <Ionicons name="storefront-outline" size={20} color="white" />
-                      <Text style={customStyles.nextStoreText}>Try Next Store</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[customStyles.nextStoreButton, { backgroundColor: '#609966' }]}>
-                      <Ionicons name="checkmark-circle-outline" size={20} color="white" />
-                      <Text style={customStyles.nextStoreText}>Item Found</Text>
-                    </TouchableOpacity>
+              <View>
+                {/* Product Navigation */}
+                <View style={customStyles.productNav}>
+                  <TouchableOpacity 
+                    style={[
+                      customStyles.navButton,
+                      currentItemIndex === 0 && customStyles.navButtonDisabled
+                    ]}
+                    onPress={handlePrevious}
+                    disabled={currentItemIndex === 0}
+                  >
+                    <Ionicons name="chevron-back" size={24} color="#0766AD" />
+                  </TouchableOpacity>
+                  
+                  <View style={customStyles.productCounter}>
+                    <Text style={customStyles.counterText}>
+                      {shoppingList.length > 0 ? `${currentItemIndex + 1} / ${shoppingList.length}` : '0 / 0'}
+                    </Text>
                   </View>
+                  
+                  <TouchableOpacity 
+                    style={[
+                      customStyles.navButton,
+                      currentItemIndex === shoppingList.length - 1 && customStyles.navButtonDisabled
+                    ]}
+                    onPress={handleNext}
+                    disabled={currentItemIndex === shoppingList.length - 1}
+                  >
+                    <Ionicons name="chevron-forward" size={24} color="#0766AD" />
+                  </TouchableOpacity>
+                </View>
 
-            {/* Product List Accordion */}
-            {renderShoppingList()}
-          </View>
-          </View>
-        </ScrollView>
-      </View>
+                {/* Store Buttons Container */}
+                <View style={customStyles.storeButtonsContainer}>
+                  <TouchableOpacity 
+                    style={customStyles.nextStoreButton}
+                    onPress={handleTryNextStore}
+                  >
+                    <Ionicons name="storefront-outline" size={20} color="white" />
+                    <Text style={customStyles.nextStoreText}>Try Next Store</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={[customStyles.nextStoreButton, { backgroundColor: '#609966' }]}>
+                    <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                    <Text style={customStyles.nextStoreText}>Item Found</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Product List Accordion */}
+                {renderShoppingList()}
+              </View>
+            </View>
+          </ScrollView>
+        </Animated.View>
+      </Modal>
     </View>
   );
 }
 
 const customStyles = {
+  topHUD: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  hudSearchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   mainContainer: {
     flex: 1,
     flexDirection: 'row',
     padding: 20,
     gap: 20,
-  },
-  listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-
-  },
-  optimizeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#0766AD',
-    gap: 6,
-  },
-  optimizeButtonActive: {
-    backgroundColor: '#0766AD',
-  },
-  optimizeButtonText: {
-    fontSize: 14,
-    color: '#0766AD',
-  },
-  optimizeButtonTextActive: {
-    color: 'white',
   },
   mapWrapper: {
     flex: 1,
@@ -592,25 +663,97 @@ const customStyles = {
   floorButtonTextActive: {
     color: 'white',
   },
+  openDrawerButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0766AD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 50,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
   scrollView: {
     width: '100%',
     height: '100%',
   },
-  sidebar: {
+  drawerOverlay: {
     flex: 1,
-    minWidth: 280,
-    maxWidth: 450, 
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  drawer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: Dimensions.get('window').height * 0.75,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  drawerHandle: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  drawerHandleBar: {
+    width: 40,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#ddd',
+  },
+  drawerContent: {
+    flex: 1,
+  },
+  drawerInnerContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    gap: 15,
+  },
+  drawerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  optimizeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#0766AD',
+    gap: 4,
+    marginBottom: 8,
   },
-  sidebarContent: {
-    padding: 20,
-    gap: 10,
+  optimizeButtonActive: {
+    backgroundColor: '#0766AD',
   },
-  productSection: {
-    gap: 12,
+  optimizeButtonText: {
+    fontSize: 14,
+    color: '#0766AD',
+  },
+  optimizeButtonTextActive: {
+    color: 'white',
   },
   sectionTitle: {
     fontSize: 16,
@@ -694,12 +837,12 @@ const customStyles = {
     color: '#0766AD',
   },
   nextStoreButton: {
-    flex: 1, // Added to make buttons take equal width
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0766AD',
-    paddingHorizontal: 20, // Increased from 12 to 20
+    paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 6,
     gap: 8,
@@ -715,7 +858,8 @@ const customStyles = {
   productItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
     marginBottom: 8,
@@ -769,7 +913,7 @@ const customStyles = {
   storeButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 4, // Reduced from 10 to 4
+    gap: 4,
     marginTop: 10,
   },
 };

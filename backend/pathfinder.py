@@ -1,12 +1,10 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import json
 import heapq
 import math
 import os
-
-app = Flask(__name__)
-CORS(app)
+import sys
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 class PathFinder:
     def __init__(self):
@@ -214,43 +212,58 @@ class PathFinder:
         return route_order
 
     def optimize_shopping_route(self, start_id, shopping_list):
-        """Find optimal route through shopping list items"""
+        """Find optimal route through shopping list items by finding closest products sequentially"""
         # Initialize variables
         unvisited_items = shopping_list.copy()
         current_pos = start_id
-        optimal_route = []
+        optimized_list = []
         
         while unvisited_items:
             min_cost = float('inf')
             next_item = None
-            best_path = None
+            next_node = None
             
             # Try each remaining item
             for item in unvisited_items:
-                item_id = int(item['id'].replace('p' if item['type'] == 'Product' else 's', ''))
-                end_nodes = self.get_path_nodes_for_item(item_id, item['type'])
+                if item['type'] == 'Product':
+                    item_id = int(item['id'].replace('p', ''))
                     
-                # Find closest node for this item
-                for end_node in end_nodes:
-                    path = self.find_path(current_pos, end_node)
-                    if path:
-                        cost = self.calculate_path_cost(path)
-                        if cost < min_cost:
-                            min_cost = cost
-                            next_item = item
-                            best_path = path
-        
+                    # Get all stalls that sell this product
+                    valid_stalls = {}
+                    for stall_id, stall_data in self.save_data['stalls'].items():
+                        if item_id in stall_data.get('products', []):
+                            valid_stalls[stall_id] = stall_data
+                    
+                    # Get possible end nodes from valid stalls
+                    possible_end_nodes = []
+                    for stall_data in valid_stalls.values():
+                        possible_end_nodes.extend(stall_data.get('pathNode', []))
+                    
+                    # Find closest node for this product
+                    closest_node = self.find_closest_path_node(current_pos, possible_end_nodes)
+                    
+                    if closest_node:
+                        path = self.find_path(current_pos, closest_node)
+                        if path:
+                            cost = 0
+                            for i in range(len(path) - 1):
+                                cost += float(self.connections[str(path[i])][str(path[i + 1])])
+                            
+                            if cost < min_cost:
+                                min_cost = cost
+                                next_item = item
+                                next_node = closest_node
+            
             if next_item:
-                optimal_route.append({
-                    'item': next_item,
-                    'path': best_path
-                })
-                current_pos = best_path[-1]
+                optimized_list.append(next_item)
+                current_pos = next_node  # Use the end node as the next starting point
                 unvisited_items.remove(next_item)
             else:
                 break
-    
-        return optimal_route
+        
+        # Add any remaining non-product items to the end of the list
+        optimized_list.extend([item for item in unvisited_items if item['type'] != 'Product'])
+        return optimized_list
 
     def get_next_path_node(self, start_id, current_stall_id, possible_end_nodes, visited_nodes):
         """Find the next best pathNode, excluding nodes from current stall and already visited nodes
@@ -278,47 +291,57 @@ class PathFinder:
         # Find the closest node from the remaining available nodes
         return self.find_closest_path_node(start_id, available_nodes)
 
-pathfinder = PathFinder()
 
-@app.route('/findpath', methods=['POST'])
-def find_path():
-    data = request.json
+def process_request(data):
+    """Process a pathfinding request and return results as JSON"""
+    pathfinder = PathFinder()
     
     # Handle reset request first
     if data.get('reset'):
         pathfinder.reset_state()
         print("\n=== Pathfinding Reset ===")
         print("All states cleared")
-        return jsonify({'status': 'reset successful'}), 200
+        return {'status': 'reset successful'}
 
-    data = request.json
     start_id = data.get('start')
     shopping_list = data.get('shopping_list', [])
     current_index = data.get('current_index', 0)
-    reset = data.get('reset', False)
-
-    if reset:
-        pathfinder.excluded_end_nodes.clear()
-        return jsonify({'status': 'reset successful'}), 200
 
     print("\n=== Path Finding ===")
     print(f"Start node: {start_id}")
     print(f"Currently excluded nodes: {pathfinder.excluded_end_nodes}")
 
     if not start_id:
-        return jsonify({'error': 'Missing start node'}), 400
+        return {'error': 'Missing start node'}
 
     if shopping_list and len(shopping_list) > 0:
         optimize = data.get('optimize', False)  # Get optimize flag from request
         
         if optimize:
-            # Only perform optimization if the flag is True
-            closest_index = pathfinder.find_closest_product(start_id, shopping_list)
+            # Get optimized shopping list
+            optimized_list = pathfinder.optimize_shopping_route(start_id, shopping_list)
             
-            if closest_index is not None and closest_index > 0:
-                closest_item = shopping_list.pop(closest_index)
-                shopping_list.insert(0, closest_item)
-                current_index = 0
+            if optimized_list:
+                # Get path to first item in optimized list
+                current_item = optimized_list[0]
+                if current_item['type'] == 'Product':
+                    item_id = int(current_item['id'].replace('p', ''))
+                    
+                    # Get possible end nodes for first product
+                    possible_end_nodes = []
+                    for stall_data in pathfinder.save_data['stalls'].values():
+                        if item_id in stall_data.get('products', []):
+                            possible_end_nodes.extend(stall_data.get('pathNode', []))
+                    
+                    # Find path to closest node
+                    closest_node = pathfinder.find_closest_path_node(start_id, possible_end_nodes)
+                    if closest_node:
+                        path = pathfinder.find_path(start_id, closest_node)
+                        return {
+                            'shopping_list': optimized_list,
+                            'current_index': 0,
+                            'path': path
+                        }
 
         current_item = shopping_list[current_index]
         
@@ -341,13 +364,13 @@ def find_path():
                                  if node not in pathfinder.excluded_end_nodes]
             
             if not available_end_nodes:
-                return jsonify({'error': 'No more available nodes'}), 404
+                return {'error': 'No more available nodes'}
 
             # Find closest available end node
             end_id = pathfinder.find_closest_path_node(start_id, available_end_nodes)
 
             if not end_id:
-                return jsonify({'error': 'No reachable path node found'}), 404
+                return {'error': 'No reachable path node found'}
 
             # Find path
             path = pathfinder.find_path(start_id, end_id)
@@ -367,15 +390,36 @@ def find_path():
 
             print(f"Updated excluded nodes: {pathfinder.excluded_end_nodes}\n")
 
-            return jsonify({
+            return {
                 'path': path,
                 'current_stall': destination_stall,
-                'shopping_list': shopping_list,  # Return the reordered list
-                'current_index': current_index  # Return the updated index
-            })
+                'shopping_list': shopping_list,
+                'current_index': current_index
+            }
 
-    return jsonify({'error': 'Invalid request'}), 400
+    return {'error': 'Invalid request'}
+
 
 if __name__ == '__main__':
-    print("PathFinder initialized. Loading data files...")
-    app.run(debug=True)
+    # Create Flask app
+    app = Flask(__name__)
+    CORS(app)
+    
+    # Initialize pathfinder
+    pathfinder = PathFinder()
+    
+    @app.route('/reset', methods=['POST'])
+    def reset():
+        """Reset pathfinding state"""
+        pathfinder.reset_state()
+        return jsonify({'status': 'reset'})
+    
+    @app.route('/findpath', methods=['POST'])
+    def find_path():
+        """Find path for shopping list"""
+        data = request.get_json()
+        result = process_request(data)
+        return jsonify(result)
+    
+    print('Starting PathFinder server on port 5000...')
+    app.run(host='0.0.0.0', port=5000, debug=False)

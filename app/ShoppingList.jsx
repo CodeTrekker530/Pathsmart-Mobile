@@ -1,10 +1,14 @@
 /* eslint-disable prettier/prettier */
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Animated, PanResponder, Modal, Dimensions } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
+import SearchBar from './components/searchBar';
 import saveData from './utils/saveData.json';
+
+const { width, height } = Dimensions.get('window');
+const DRAWER_WIDTH = width; // Full screen width
 
 const imageMap = {
   "image.png": require("./assets/image.png"),
@@ -15,9 +19,38 @@ export default function ShoppingList() {
   const [searchResults, setSearchResults] = useState([]);
   const [listItems, setListItems] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const drawX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
   const router = useRouter();
 
   const filters = ['All', 'Products', 'Stores', 'Services'];
+
+  // Animate drawer open/close
+  useEffect(() => {
+    if (drawerVisible) {
+      Animated.timing(drawX, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(drawX, {
+        toValue: DRAWER_WIDTH,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [drawerVisible, drawX]);
+
+  const closeDrawer = () => {
+    Animated.timing(drawX, {
+      toValue: DRAWER_WIDTH,
+      duration: 350,
+      useNativeDriver: true,
+    }).start(() => {
+      setDrawerVisible(false);
+    });
+  };
 
   const loadData = (searchTerm = '') => {
     const searchLower = searchTerm.toLowerCase();
@@ -61,10 +94,10 @@ export default function ShoppingList() {
     return () => clearTimeout(debounceTimer);
   }, [search]);
 
-  // Store shopping list in localStorage/AsyncStorage
-  const saveShoppingList = (items) => {
+  // Store shopping list in AsyncStorage (mobile)
+  const saveShoppingList = async (items) => {
     try {
-      localStorage.setItem('shoppingList', JSON.stringify(items));
+      await AsyncStorage.setItem('shoppingList', JSON.stringify(items));
       console.log('Saved shopping list:', items); // Debug log
     } catch (error) {
       console.error('Error saving shopping list:', error);
@@ -85,16 +118,20 @@ export default function ShoppingList() {
     saveShoppingList(newList);
   };
 
-  // Load saved list on mount
+  // Load saved list on mount (AsyncStorage)
   useEffect(() => {
-    const savedList = localStorage.getItem('shoppingList');
-    if (savedList) {
+    const loadSavedList = async () => {
       try {
-        setListItems(JSON.parse(savedList));
+        const savedList = await AsyncStorage.getItem('shoppingList');
+        if (savedList) {
+          setListItems(JSON.parse(savedList));
+        }
       } catch (error) {
         console.error('Error loading shopping list:', error);
       }
-    }
+    };
+
+    loadSavedList();
   }, []);
 
   const filteredResults = searchResults.filter(item => {
@@ -115,100 +152,95 @@ export default function ShoppingList() {
 
   return (
     <>
-      {/* Top HUD (outside the styled container) */}
-      <LinearGradient
-        colors={["#0766AD", "#BCE2BD"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.header, { marginBottom: 0 }]}
-      >
-        <View style={styles.headerRowSpace}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image
-              source={require("./assets/logo.png")}
-              style={styles.logo}
-            />
-            <Text style={styles.logo_name}>PathSmart</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => { router.push("/screens/loginScreen"); }}
-          >
-            <Text style={{ fontWeight: "600", color: "#0766AD" }}>Login</Text>
-          </TouchableOpacity>
+      {/* Top HUD with SearchBar */}
+      <View style={styles.topHUD}>
+        <View style={styles.hudSearchBar}>
+          <SearchBar />
         </View>
-      </LinearGradient>
+      </View>
       <View style={styles.container}>
-        {/* Main Content */}
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.pageHeader}>Shopping List</Text>
-        </View>
-        <View style={styles.row}>
-          {/* Search & Results */}
-          <View style={styles.column}>
-            <Text style={styles.subHeader}>Search</Text>
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search for items to add..."
-                value={search}
-                onChangeText={setSearch}
-              />
-            </View>
-            {/* Filter Buttons */}
-            <View style={styles.filters}>
-              {filters.map(filter => (
-                <TouchableOpacity
-                  key={filter}
+        {/* Search Results */}
+        <View style={styles.resultsSection}>
+          {/* Filter Buttons */}
+          <View style={styles.filters}>
+            {filters.map(filter => (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  styles.filterButton,
+                  selectedFilter === filter && styles.activeFilter,
+                ]}
+                onPress={() => setSelectedFilter(filter)}
+              >
+                <Text
                   style={[
-                    styles.filterButton,
-                    selectedFilter === filter && styles.activeFilter,
+                    styles.filterText,
+                    selectedFilter === filter && styles.activeFilterText,
                   ]}
-                  onPress={() => setSelectedFilter(filter)}
                 >
-                  <Text
-                    style={[
-                      styles.filterText,
-                      selectedFilter === filter && styles.activeFilterText,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <FlatList
-              data={filteredResults}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.resultRow}
-                  onPress={() => addToList(item)}
-                >
-                  <Image
-                    source={imageMap[item.image] || imageMap["image.png"]}
-                    style={styles.itemImage}
-                  />
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.resultText}>{item.name}</Text>
-                    <Text style={styles.itemCategory}>{item.category}</Text>
-                  </View>
-                  <Ionicons name="add-circle-outline" size={22} color="#249B3E" />
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>No results found.</Text>
-              }
-              style={styles.resultsList}
-            />
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          {/* Shopping List */}
-          <View style={styles.column}>
-            <Text style={styles.subHeader}>Your List</Text>
+          <FlatList
+            data={filteredResults}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.resultRow}
+                onPress={() => addToList(item)}
+              >
+                <Image
+                  source={imageMap[item.image] || imageMap["image.png"]}
+                  style={styles.itemImage}
+                />
+                <View style={styles.itemInfo}>
+                  <Text style={styles.resultText}>{item.name}</Text>
+                  <Text style={styles.itemCategory}>{item.category}</Text>
+                </View>
+                <Ionicons name="add-circle-outline" size={22} color="#249B3E" />
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No results found.</Text>
+            }
+          />
+        </View>
+
+        {/* Shopping List Drawer Button */}
+        <TouchableOpacity
+          style={styles.drawerButton}
+          onPress={() => setDrawerVisible(true)}
+        >
+          <Ionicons name="list" size={24} color="#fff" />
+          <Text style={styles.drawerButtonText}>{listItems.length}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Shopping List Drawer */}
+      <Modal
+        visible={drawerVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <View style={styles.drawerOverlay}>
+          <TouchableOpacity
+            style={styles.drawerBackdrop}
+            onPress={closeDrawer}
+          />
+          <Animated.View style={[styles.drawer, { transform: [{ translateX: drawX }] }]}>
+            {/* Drawer Header */}
+            <View style={styles.drawerHeader}>
+              <TouchableOpacity onPress={closeDrawer}>
+                <Ionicons name="chevron-forward" size={28} color="#000" />
+              </TouchableOpacity>
+              <Text style={styles.drawerTitle}>Your List ({listItems.length})</Text>
+              <View style={{ width: 28 }} />
+            </View>
+
+            {/* Drawer Content */}
             <FlatList
               data={listItems}
               keyExtractor={item => item.id}
@@ -230,7 +262,7 @@ export default function ShoppingList() {
               ListEmptyComponent={
                 <Text style={styles.emptyText}>No items in your list.</Text>
               }
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 16, paddingTop: 8 }}
             />
 
             {/* Find Path Button */}
@@ -243,19 +275,97 @@ export default function ShoppingList() {
                 <Text style={styles.findPathText}>Find Path</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </Animated.View>
         </View>
-      </View>
+      </Modal>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  topHUD: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  hudSearchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 24,
-    paddingTop: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    position: 'relative',
+  },
+  resultsSection: {
+    flex: 1,
+  },
+  drawerButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#2c6e49',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  drawerButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    position: 'absolute',
+    top: 4,
+    right: 6,
+  },
+  drawerOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  drawerBackdrop: {
+    flex: 1,
+  },
+  drawer: {
+    width: DRAWER_WIDTH,
+    backgroundColor: '#fff',
+    height: '100%',
+    paddingTop: 40,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: -2, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  drawerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    flex: 1,
+    textAlign: 'center',
   },
   header: {
     flexDirection: "row",
@@ -298,38 +408,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  pageHeader: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 18,
-    color: "#222",
-    textAlign: "Left",
-    marginTop: 15,
-  },
-  row: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 24,
-  },
-  column: {
-    flex: 1,
-  },
-  subHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#249B3E",
-    textAlign: "center",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#f1f1f1",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    alignItems: "center",
-    marginBottom: 10,
-  },
   filters: {
     flexDirection: 'row',
     marginTop: 8,
@@ -353,16 +431,6 @@ const styles = StyleSheet.create({
   },
   activeFilterText: {
     color: '#fff',
-  },
-  searchIcon: {
-    marginRight: 6,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-  },
-  resultsList: {
-    flexGrow: 0,
   },
   resultRow: {
     flexDirection: "row",
@@ -411,12 +479,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8, // optional, for spacing between icon and text
-    marginTop: 20,
-  },
   findPathButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,6 +487,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginTop: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
     gap: 8,
   },
   findPathText: {

@@ -1,216 +1,186 @@
 /* eslint-disable prettier/prettier */
-// app/screens/home.jsx
-import React from "react";
+import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
   ScrollView,
-  useWindowDimensions,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import SearchBar from "./components/searchBar";
-import { useRouter } from "expo-router"; // ⬅️ import router
+  TouchableOpacity,
+  Dimensions,
+  SafeAreaView,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import SearchBar from './components/searchBar';
 
-export default function Home() {
-  const { width } = useWindowDimensions();
-  const isSmallScreen = width < 768; // responsive breakpoint
+const { width } = Dimensions.get('window');
+
+export default function HomeScreen() {
   const router = useRouter();
 
+  const categories = [
+    { id: 1, name: 'Baked Goods', icon: '�', color: '#FF6B6B' },
+    { id: 2, name: 'Fruits', icon: '🍎', color: '#4ECDC4' },
+    { id: 3, name: 'Vegetables', icon: '�', color: '#FFE66D' },
+    { id: 4, name: 'Meat', icon: '🥩', color: '#A8D8EA' },
+    { id: 5, name: 'Household Tools', icon: '🔨', color: '#FF9999' },
+    { id: 6, name: 'Services', icon: '🛠️', color: '#C7CEEA' },
+  ];
+
+  const handleCategoryPress = (category) => {
+    // Navigate to map with category filter or handle category selection
+    router.push('/pathfinder');
+  };
+
+  const handleTutorial = () => {
+    // Navigate to tutorial screen (you can create this later)
+    router.push('/pathfinder');
+  };
+
   return (
-    <LinearGradient
-      colors={["#0766AD", "#BCE2BD"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      {/* Top HUD (stays at top, same gradient) */}
-      <LinearGradient
-        colors={["#0766AD", "#BCE2BD"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* Top HUD - Flex Row */}
+      <View style={styles.topHUD}>
+        {/* Search Bar */}
+        <View style={styles.hudSearchBar}>
+          <SearchBar />
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
-        <Image
-          source={require("./assets/logo.png")} // replace with your logo path
-          style={styles.logo}
-        />
-        <Text style={styles.logo_name}>PathSmart</Text>
-        <SearchBar />
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => {
-            router.push("/screens/loginScreen");
-          }}
-        >
-          <Text style={{ fontWeight: "600", color: "#0766AD" }}>Login</Text>
-        </TouchableOpacity>
-      </LinearGradient>
+        {/* Middle Section - App Description & Tutorial Button */}
+        <View style={styles.descriptionSection}>
+          <Text style={styles.descriptionTitle}>
+            Shop Smarter with PathSmart
+          </Text>
+          <Text style={styles.descriptionText}>
+            PathSmart helps you navigate through the store and find everything on your shopping list with ease. Get optimal routes and save time!
+          </Text>
 
-      {/* Scrollable Main Content */}
-      <ScrollView contentContainerStyle={styles.mainContent}>
-        {/* Hero Section */}
-        <View
-          style={[
-            styles.heroSection,
-            isSmallScreen && styles.heroSectionStacked,
-          ]}
-        >
-          {/* Left side: text */}
-          <View style={styles.heroText}>
-            <Text style={styles.heroTitle}>
-              Find Your Way Faster with PathSmart
-            </Text>
-            <Text style={styles.heroSubtitle}>
-              Your personal guide inside Naga City People’s Mall.
-            </Text>
-            <Text style={styles.heroSubtitle2}>
-              From fresh produce to household needs, PathSmart shows you the
-              quickest route to your store — no more getting lost in the crowd.
-            </Text>
+          <TouchableOpacity
+            style={styles.tutorialButton}
+            onPress={handleTutorial}
+          >
+            <Text style={styles.tutorialButtonText}>Get Started</Text>
+          </TouchableOpacity>
+        </View>
 
-            {/* Buttons in a row */}
-            <View style={styles.heroButtons}>
+        {/* Categories Section */}
+        <View style={styles.categoriesSection}>
+          <Text style={styles.categoriesTitle}>Browse by Category</Text>
+
+          <View style={styles.categoriesGrid}>
+            {categories.map((category) => (
               <TouchableOpacity
-                style={[styles.bigButton, styles.tutorialButton]}
+                key={category.id}
+                style={[styles.categoryCard, { backgroundColor: category.color }]}
+                onPress={() => handleCategoryPress(category)}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.bigButtonText, styles.tutorialText]}>
-                  Tutorial
-                </Text>
+                <Text style={styles.categoryIcon}>{category.icon}</Text>
+                <Text style={styles.categoryName}>{category.name}</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.bigButton}
-                onPress={() => {
-                  router.push("/ShoppingList");
-                }}
-              >
-                <Text style={styles.bigButtonText}>Create Shopping List</Text>
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
-
-          {/* Right side: image (hidden on small screens) */}
-          {!isSmallScreen && (
-            <Image
-              source={require("./assets/logo.png")} // replace with your picture
-              style={styles.heroImage}
-            />
-          )}
         </View>
       </ScrollView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+const styles = {
+  topHUD: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  logo: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-    marginRight: 10,
+  hudSearchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  mainContent: {
-    flexGrow: 1,
-    paddingVertical: 20,
+  hudSearchLogo: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
+    marginRight: 8,
+  },
+  descriptionSection: {
     paddingHorizontal: 20,
+    paddingVertical: 32,
+    gap: 16,
+    alignItems: 'center',
   },
-  logo_name: {
-    fontSize: 20,
-    fontWeight: "450",
-    color: "#fff",
-    marginRight: 10,
+  descriptionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
   },
-  loginButton: {
-    padding: 8,
-    height: 42,
-    width: 126,
-    borderRadius: 10,
-    marginLeft: 10,
-    fontSize: 18,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  bigButton: {
-    height: 50,
-    minWidth: 150,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    backgroundColor: "#249B3E",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  bigButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#fff",
+  descriptionText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   tutorialButton: {
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#609966',
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
   },
-  tutorialText: {
-    color: "#000",
-  },
-  heroSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 20,
-  },
-  heroSectionStacked: {
-    flexDirection: "column",
-  },
-  heroText: {
-    flex: 1,
-    paddingRight: 15,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 10,
-  },
-  heroSubtitle: {
+  tutorialButtonText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: "500",
-    color: "#f0f0f0",
-    marginBottom: 6,
+    fontWeight: '600',
   },
-  heroSubtitle2: {
+  categoriesSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    gap: 16,
+  },
+  categoriesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  categoryCard: {
+    width: (width - 52) / 2,
+    paddingVertical: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+  categoryIcon: {
+    fontSize: 40,
+  },
+  categoryName: {
     fontSize: 14,
-    color: "#e0e0e0",
-    lineHeight: 20,
-    marginBottom: 15,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
   },
-  heroButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    flexWrap: "wrap",
-  },
-  heroImage: {
-    width: 400,
-    height: 400,
-    resizeMode: "contain",
-  },
-});
+};

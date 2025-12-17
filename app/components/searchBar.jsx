@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 // app/components/SearchBar.jsx
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { View, TextInput, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router"; // ⬅️ import router
 import ToolsDropdown from "./ToolsDropdown";
@@ -13,24 +13,13 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
 
   return (
     <View style={styles.container}>
-      {/* Tools Button */}
-      <View style={{ position: "relative", zIndex: 999 }}>
-        <TouchableOpacity
-          style={styles.toolsButton}
-          onPress={() => setDropdownVisible((v) => !v)}
-        >
-          <Ionicons name="construct-outline" size={22} color="#000" />
-        </TouchableOpacity>
-        <ToolsDropdown visible={dropdownVisible} onClose={() => setDropdownVisible(false)} />
-      </View>
-      {/* Divider */}
-      <View style={styles.divider} />
-      {/* Filter + Search Group */}
+      {/* Search Group with Logo */}
       <View style={styles.filterSearchGroup}>
-        {/* Filter Button */}
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter-outline" size={22} color="#000" />
-        </TouchableOpacity>
+        {/* Logo inside search */}
+        <Image
+          source={require("../assets/logo.png")}
+          style={styles.searchLogo}
+        />
         {/* Search Box with Icon */}
         <View style={styles.searchWrapper}>
           <TextInput
@@ -39,16 +28,20 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
             placeholderTextColor="#999"
             value={text}
             onChangeText={setText}
-            onSubmitEditing={() => router.push("/searchResult")} // ⬅️ ENTER goes to SearchResults
+            onSubmitEditing={() => router.push("/ShoppingList")} // ⬅️ ENTER goes to Shopping List
             returnKeyType="search"
           />
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color="#666"
-            style={styles.searchIcon}
-          />
         </View>
+      </View>
+      {/* Options Button */}
+      <View style={{ position: "relative", zIndex: 999, marginLeft: 12 }}>
+        <TouchableOpacity
+          style={styles.optionsButton}
+          onPress={() => setDropdownVisible((v) => !v)}
+        >
+          <Ionicons name="ellipsis-vertical" size={22} color="#000" />
+        </TouchableOpacity>
+        <ToolsDropdown visible={dropdownVisible} onClose={() => setDropdownVisible(false)} />
       </View>
     </View>
   );
@@ -59,23 +52,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    marginHorizontal: 20,
+    marginHorizontal: 12,
   },
-  toolsButton: {
-    padding: 8,
-    height: 42,
-    width: 42,
+  optionsButton: {
+    height: 20,
+    width: 20,
     borderRadius: 10,
-    marginRight: 5,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-  },
-  divider: {
-    width: 1,
-    height: 32,
-    backgroundColor: "#e0e0e0",
-    marginHorizontal: 8,
   },
   filterSearchGroup: {
     flexDirection: "row",
@@ -83,34 +68,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     borderRadius: 10,
     flex: 1,
-    paddingLeft: 4,
+    paddingLeft: 8,
   },
-  filterButton: {
-    padding: 8,
-    height: 42,
-    width: 42,
-    borderRadius: 10,
-    marginRight: 5,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
+  searchLogo: {
+    width: 28,
+    height: 28,
+    resizeMode: "contain",
+    marginRight: 6,
   },
   searchWrapper: {
     flex: 1,
     position: "relative",
   },
   searchBox: {
-    height: 42,
+    height: 46,
     backgroundColor: "#f5f5f5",
     borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     fontSize: 16,
     color: "#000",
-  },
-  searchIcon: {
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: [{ translateY: -10 }],
   },
 });
