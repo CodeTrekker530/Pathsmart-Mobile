@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import SearchBar from './components/searchBar';
+import CategoryButton from './components/CategoryButton';
 
 const { width } = Dimensions.get('window');
 
@@ -18,12 +19,30 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const categories = [
-    { id: 1, name: 'Baked Goods', icon: '�', color: '#FF6B6B' },
-    { id: 2, name: 'Fruits', icon: '🍎', color: '#4ECDC4' },
-    { id: 3, name: 'Vegetables', icon: '�', color: '#FFE66D' },
-    { id: 4, name: 'Meat', icon: '🥩', color: '#A8D8EA' },
-    { id: 5, name: 'Household Tools', icon: '🔨', color: '#FF9999' },
-    { id: 6, name: 'Services', icon: '🛠️', color: '#C7CEEA' },
+    { 
+      id: 1, 
+      name: 'Vegetables', 
+      color: '#036B00',
+      image: require('./assets/images/vegetables_img.png'),
+    },
+    { 
+      id: 2, 
+      name: 'Fruits', 
+      color: '#CD0000',
+      image: require('./assets/images/fruits_img.png'),
+    },
+    { 
+      id: 3, 
+      name: 'Meat', 
+      color: '#B94A4A',
+      image: require('./assets/images/meat_img.png'),
+    },
+    { 
+      id: 4, 
+      name: 'Services', 
+      color: '#000000',
+      image: require('./assets/images/services_img.png'),
+    },
   ];
 
   const handleCategoryPress = (category) => {
@@ -73,15 +92,11 @@ export default function HomeScreen() {
 
           <View style={styles.categoriesGrid}>
             {categories.map((category) => (
-              <TouchableOpacity
+              <CategoryButton
                 key={category.id}
-                style={[styles.categoryCard, { backgroundColor: category.color }]}
+                category={category}
                 onPress={() => handleCategoryPress(category)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.categoryIcon}>{category.icon}</Text>
-                <Text style={styles.categoryName}>{category.name}</Text>
-              </TouchableOpacity>
+              />
             ))}
           </View>
         </View>
@@ -160,27 +175,5 @@ const styles = {
     flexWrap: 'wrap',
     gap: 12,
     justifyContent: 'space-between',
-  },
-  categoryCard: {
-    width: (width - 52) / 2,
-    paddingVertical: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-  },
-  categoryIcon: {
-    fontSize: 40,
-  },
-  categoryName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
-    textAlign: 'center',
   },
 };

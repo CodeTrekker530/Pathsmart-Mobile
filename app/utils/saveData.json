@@ -1,395 +1,360 @@
-
-
 {
   "products": {
-    "1": { "name": "Bread", "category": "Bakery" },
-    "2": { "name": "Rice", "category": "Grains" },
-    "3": { "name": "Cobbler (Shoe Repair)", "category": "Services" },
-    "4": { "name": "Haircut (Service)", "category": "Services" },
-    "5": { "name": "Broom", "category": "Household" },
-    "6": { "name": "Eggplant", "category": "Vegetables" },
-    "7": { "name": "Onion", "category": "Vegetables" },
-    "8": { "name": "Garlic", "category": "Vegetables" },
-    "9": { "name": "Ginger", "category": "Vegetables" },
-    "10": { "name": "Banana", "category": "Fruits" },
-    "11": { "name": "Apple", "category": "Fruits" }
-  },
-
-  "sections": {
-    "1": {
-      "name": "Wet Market A",
-      "nodes": [1, 2, 3, 4, 5, 6, 7, 8],
-      "stalls": [1, 2, 3, 4, 5, 6, 7, 8]
-    },
-    "2": {
-      "name": "Wet Market B",
-      "nodes": [18, 19, 20],
-      "stalls": [9, 10, 11, 12, 13, 14, 15]
-    },
-    "3": {
-      "name": "Dry Goods A",
-      "nodes": [21, 22],
-      "stalls": [16, 17, 18, 19, 20, 21]
-    },
-    "4": {
-      "name": "Dry Goods B",
-      "nodes": [23, 24, 25],
-      "stalls": [22, 23, 24, 25, 26]
-    },
-    "5": {
-      "name": "Fresh Produce A",
-      "nodes": [26, 27, 28],
-      "stalls": [27, 28, 29, 30, 31]
-    },
-    "6": {
-      "name": "Fresh Produce B",
-      "nodes": [29, 30, 31],
-      "stalls": [32, 33, 34, 35]
-    }
+    "p1": { "name": "Bread", "category": "Bakery" },
+    "p2": { "name": "Rice", "category": "Grains" },
+    "p3": { "name": "Cobbler (Shoe Repair)", "category": "Services" },
+    "p4": { "name": "Haircut (Service)", "category": "Services" },
+    "p5": { "name": "Broom", "category": "Household" },
+    "p6": { "name": "Eggplant", "category": "Vegetables" },
+    "p7": { "name": "Onion", "category": "Vegetables" },
+    "p8": { "name": "Garlic", "category": "Vegetables" },
+    "p9": { "name": "Ginger", "category": "Vegetables" },
+    "p10": { "name": "Banana", "category": "Fruits" },
+    "p11": { "name": "Apple", "category": "Fruits" }
   },
 
   "stalls": {
     "1": {
       "name": "Grain Stall 1",
       "nodes": [1],
-      "products": [2],
-      "pathNode": [33, 17]
+      "products": ["p2"],
+      "stall_endNode": [33, 17]
     },
     "2": {
       "name": "Bakery 1",
       "nodes": [2],
-      "products": [1],
-      "pathNode": [15, 16]
+      "products": ["p1"],
+      "stall_endNode": [15, 16]
     },
     "3": {
       "name": "Vegetable Stall 3",
       "nodes": [3],
-      "products": [6, 7, 8, 9],
-      "pathNode": [2, 9]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [2, 9]
     },
     "4": {
       "name": "Grain Stall 2",
       "nodes": [4],
-      "products": [2],
-      "pathNode": [21, 31]
+      "products": ["p2"],
+      "stall_endNode": [21, 31]
     },
     "5": {
       "name": "Vegetable Stall 5",
       "nodes": [5],
-      "products": [6, 7, 8, 9],
-      "pathNode": [23]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [23]
     },
     "6": {
       "name": "Vegetable Stall 6",
       "nodes": [6],
-      "products": [6, 7, 8, 9],
-      "pathNode": [25]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [25]
     },
     "7": {
       "name": "Bakery 2",
       "nodes": [7],
-      "products": [1],
-      "pathNode": [56, 55]
+      "products": ["p1"],
+      "stall_endNode": [56, 55]
     },
     "8": {
       "name": "Bakery 3",
       "nodes": [8],
-      "products": [1],
-      "pathNode": [40, 87]
+      "products": ["p1"],
+      "stall_endNode": [40, 87]
     },
     "9": {
       "name": "Fruit Stall 1",
       "nodes": [9],
-      "products": [10, 11],
-      "pathNode": [115, 111]
+      "products": ["p10", "p11"],
+      "stall_endNode": [115, 111]
     },
     "10": {
       "name": "Vegetable Stall 10",
       "nodes": [10],
-      "products": [6, 7, 8, 9],
-      "pathNode": [71, 44]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [71, 44]
     },
     "11": {
       "name": "Fruit Stall 2",
       "nodes": [11],
-      "products": [10, 11],
-      "pathNode": [221, 109]
+      "products": ["p10", "p11"],
+      "stall_endNode": [221, 109]
     },
     "12": {
       "name": "Household Supplies 2",
       "nodes": [12],
-      "products": [5],
-      "pathNode": [121, 215]
+      "products": ["p5"],
+      "stall_endNode": [121, 215]
     },
     "13": {
       "name": "Grain & Bakery Stall 2",
       "nodes": [13],
-      "products": [2],
-      "pathNode": [108, 97]
+      "products": ["p2"],
+      "stall_endNode": [108, 97]
     },
     "14": {
       "name": "Vegetable Stall 14",
       "nodes": [14],
-      "products": [6, 7, 8, 9],
-      "pathNode": [105, 100]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [105, 100]
     },
     "15": {
       "name": "Vegetable Stall 15",
       "nodes": [15],
-      "products": [6, 7, 8, 9],
-      "pathNode": [100, 130]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [100, 130]
     },
     "16": {
       "name": "Vegetable Stall 16",
       "nodes": [16],
-      "products": [6, 7, 8, 9],
-      "pathNode": [130, 129]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [130, 129]
     },
     "17": {
       "name": "Fruit Stall 3",
       "nodes": [17],
-      "products": [10, 11],
-      "pathNode": [51, 129]
+      "products": ["p10", "p11"],
+      "stall_endNode": [51, 129]
     },
     "18": {
       "name": "Vegetable Stall 18",
       "nodes": [18],
-      "products": [6, 7, 8, 9],
-      "pathNode": [64, 50]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [64, 50]
     },
     "19": {
       "name": "Vegetable Stall 19",
       "nodes": [19],
-      "products": [6, 7, 8, 9],
-      "pathNode": [151, 135]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [151, 135]
     },
     "20": {
       "name": "Vegetable Stall 20",
       "nodes": [20],
-      "products": [6, 7, 8, 9],
-      "pathNode": [154, 137]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [154, 137]
     },
     "21": {
       "name": "Fruit Stall 4",
       "nodes": [21],
-      "products": [10, 11],
-      "pathNode": [139, 160]
+      "products": ["p10", "p11"],
+      "stall_endNode": [139, 160]
     },
     "22": {
       "name": "Vegetable Stall 22",
       "nodes": [22],
-      "products": [6, 7, 8, 9],
-      "pathNode": [162, 141]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [162, 141]
     },
     "23": {
       "name": "Vegetable Stall 23",
       "nodes": [23],
-      "products": [6, 7, 8, 9],
-      "pathNode": [143, 158]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [143, 158]
     },
     "24": {
       "name": "Vegetable Stall 24",
       "nodes": [24],
-      "products": [6, 7, 8, 9],
-      "pathNode": [168, 145]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [168, 145]
     },
     "25": {
       "name": "Fruit Stall 5",
       "nodes": [25],
-      "products": [10, 11],
-      "pathNode": [170, 147]
+      "products": ["p10", "p11"],
+      "stall_endNode": [170, 147]
     },
     "26": {
       "name": "Vegetable Stall 26",
       "nodes": [26],
-      "products": [6, 7, 8, 9],
-      "pathNode": [172, 149]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [172, 149]
     },
     "27": {
       "name": "Vegetable Stall 27",
       "nodes": [27],
-      "products": [6, 7, 8, 9],
-      "pathNode": [172]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [172]
     },
     "28": {
       "name": "Vegetable Stall 28",
       "nodes": [28],
-      "products": [6, 7, 8, 9],
-      "pathNode": [170]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [170]
     },
     "29": {
       "name": "Fruit Stall 6",
       "nodes": [29],
-      "products": [1],
-      "pathNode": [195]
+      "products": ["p1"],
+      "stall_endNode": [195]
     },
     "30": {
       "name": "Vegetable Stall 30",
       "nodes": [30],
-      "products": [6, 7, 8, 9],
-      "pathNode": [199]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [199]
     },
     "31": {
       "name": "Vegetable Stall 31",
       "nodes": [31],
-      "products": [6, 7, 8, 9],
-      "pathNode": [181]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [181]
     },
     "32": {
       "name": "Vegetable Stall 32",
       "nodes": [32],
-      "products": [6, 7, 8, 9],
-      "pathNode": [202, 201]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [202, 201]
     },
     "33": {
       "name": "Fruit Stall 7",
       "nodes": [33],
-      "products": [10, 11],
-      "pathNode": [201, 208]
+      "products": ["p10", "p11"],
+      "stall_endNode": [201, 208]
     },
     "34": {
       "name": "Vegetable Stall 34",
       "nodes": [34],
-      "products": [6, 7, 8, 9],
-      "pathNode": [187]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [187]
     },
     "35": {
       "name": "Vegetable Stall 35",
       "nodes": [35],
-      "products": [6, 7, 8, 9],
-      "pathNode": [191]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [191]
     },
     "36": {
       "name": "Vegetable Stall 36",
       "nodes": [36],
-      "products": [6, 7, 8, 9],
-      "pathNode": [191]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [191]
     },
     "37": {
       "name": "Fruit Stall 8",
       "nodes": [37],
-      "products": [10, 11],
-      "pathNode": [128, 127]
+      "products": ["p10", "p11"],
+      "stall_endNode": [128, 127]
     },
     "38": {
       "name": "Vegetable Stall 38",
       "nodes": [38],
-      "products": [6, 7, 8, 9],
-      "pathNode": [127, 126]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [127, 126]
     },
     "39": {
       "name": "Vegetable Stall 39",
       "nodes": [39],
-      "products": [6, 7, 8, 9],
-      "pathNode": [124, 125]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [124, 125]
     },
     "40": {
       "name": "Vegetable Stall 40",
       "nodes": [40],
-      "products": [6, 7, 8, 9],
-      "pathNode": [81, 80]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [81, 80]
     },
     "41": {
       "name": "Fruit Stall 9",
       "nodes": [41],
-      "products": [10, 11],
-      "pathNode": [86, 67]
+      "products": ["p10", "p11"],
+      "stall_endNode": [86, 67]
     },
     "42": {
       "name": "Vegetable Stall 42",
       "nodes": [42],
-      "products": [6, 7, 8, 9],
-      "pathNode": [97, 99]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [97, 99]
     },
     "43": {
       "name": "Vegetable Stall 43",
       "nodes": [43],
-      "products": [6, 7, 8, 9],
-      "pathNode": [97]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [97]
     },
     "44": {
       "name": "Vegetable Stall 44",
       "nodes": [44],
-      "products": [6, 7, 8, 9],
-      "pathNode": [9, 12]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [9, 12]
     },
     "45": {
       "name": "Fruit Stall 10",
       "nodes": [45],
-      "products": [10, 11],
-      "pathNode": [1]
+      "products": ["p10", "p11"],
+      "stall_endNode": [1]
     },
     "46": {
       "name": "Vegetable Stall 46",
       "nodes": [46],
-      "products": [6, 7, 8, 9],
-      "pathNode": [217, 95]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [217, 95]
     },
     "47": {
       "name": "Vegetable Stall 47",
       "nodes": [47],
-      "products": [6, 7, 8, 9],
-      "pathNode": [109, 91]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [109, 91]
     },
     "48": {
       "name": "Vegetable Stall 48",
       "nodes": [48],
-      "products": [6, 7, 8, 9],
-      "pathNode": [92, 73]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [92, 73]
     },
     "49": {
       "name": "Fruit Stall 11",
       "nodes": [49],
-      "products": [10, 11],
-      "pathNode": [85, 69]
+      "products": ["p10", "p11"],
+      "stall_endNode": [85, 69]
     },
     "50": {
       "name": "Vegetable Stall 50",
       "nodes": [50],
-      "products": [6, 7, 8, 9],
-      "pathNode": [92, 91]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [92, 91]
     },
     "51": {
       "name": "Vegetable Stall 51",
       "nodes": [51],
-      "products": [6, 7, 8, 9],
-      "pathNode": [117, 123]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [117, 123]
     },
     "52": {
       "name": "Vegetable Stall 52",
       "nodes": [52],
-      "products": [6, 7, 8, 9],
-      "pathNode": [26]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [26]
     },
     "53": {
       "name": "Fruit Stall 12",
       "nodes": [53],
-      "products": [10, 11],
-      "pathNode": [33, 35]
+      "products": ["p10", "p11"],
+      "stall_endNode": [33, 35]
     },
     "54": {
       "name": "Vegetable Stall 54",
       "nodes": [54],
-      "products": [6, 7, 8, 9],
-      "pathNode": [27, 30]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [27, 30]
     },
     "55": {
       "name": "Vegetable Stall 55",
       "nodes": [55],
-      "products": [6, 7, 8, 9],
-      "pathNode": [71]
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": [71]
     },
     "56": {
       "name": "Vegetable Stall 56",
       "nodes": [56],
-      "products": [6, 7, 8, 9],
-      "pathNode": []
+      "products": ["p6", "p7", "p8", "p9"],
+      "stall_endNode": []
     },
     "57": {
       "name": "Services Hub",
       "nodes": [57],
-      "products": [3, 4],
-      "pathNode": [131]
+      "products": ["p3", "p4"],
+      "stall_endNode": [131]
     }
   }
 }

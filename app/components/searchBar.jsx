@@ -16,10 +16,12 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
       {/* Search Group with Logo */}
       <View style={styles.filterSearchGroup}>
         {/* Logo inside search */}
-        <Image
-          source={require("../assets/logo.png")}
-          style={styles.searchLogo}
-        />
+        <TouchableOpacity onPress={() => router.push('/') /* or router.replace('/') if you want to clear stack */}>
+          <Image
+            source={require("../assets/logo.png")}
+            style={styles.searchLogo}
+          />
+        </TouchableOpacity>
         {/* Search Box with Icon */}
         <View style={styles.searchWrapper}>
           <TextInput

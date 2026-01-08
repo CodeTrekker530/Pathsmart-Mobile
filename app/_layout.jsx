@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 import { SelectionProvider } from "./context/SelectionContext"; // adjust path as needed
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import LandingAnimation from "./screens/landing_animation";
@@ -37,8 +37,10 @@ export default function Layout() {
   }
 
   return (
-    <SelectionProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </SelectionProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SelectionProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </SelectionProvider>
+    </GestureHandlerRootView>
   );
 }

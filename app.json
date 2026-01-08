@@ -27,6 +27,13 @@
       "favicon": "app/assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router"]
+    "plugins": ["expo-router"],
+    "router": {
+      "ignorePatterns": [
+        "utils/**",
+        "**/*.test.{js,jsx,ts,tsx}",
+        "**/__*"
+      ]
+    }
   }
 }

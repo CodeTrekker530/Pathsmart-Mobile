@@ -17,7 +17,6 @@ export default StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    width: contentWidth,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -29,8 +28,8 @@ export default StyleSheet.create({
   mapContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
-    width: contentWidth,
+    width: window.width * 2.5,
+    height: window.height * 2.5,
   },
   topOverlay: {
     position: 'absolute',
