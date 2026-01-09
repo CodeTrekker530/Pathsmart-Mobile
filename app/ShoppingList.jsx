@@ -1,11 +1,40 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Animated, PanResponder, Modal, Dimensions } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Animated, PanResponder, Modal, Dimensions, TextInput } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import SearchBar from './components/searchBar';
+import { useRouter, useLocalSearchParams } from "expo-router";
+
 import saveData from './utils/saveData.json';
+
+// Local search bar for ShoppingList
+function ShoppingListSearchBar({ value, onChange, placeholder = "Search your list..." }) {
+
+const router = useRouter();
+
+  return (
+    <View style={styles.searchBarContainer}>
+      <View style={styles.filterSearchGroup}>
+        <TouchableOpacity onPress={() => router.push('/') /* or router.replace('/') if you want to clear stack */}>
+          <Image
+            source={require("./assets/logo.png")}
+            style={styles.searchLogo}
+          />
+        </TouchableOpacity>
+        <View style={styles.searchWrapper}>
+          <TextInput
+            style={styles.searchBox}
+            placeholder={placeholder}
+            placeholderTextColor="#999"
+            value={value}
+            onChangeText={onChange}
+            returnKeyType="search"
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 const { width, height } = Dimensions.get('window');
 const DRAWER_WIDTH = width; // Full screen width
@@ -15,7 +44,21 @@ const imageMap = {
 };
 
 export default function ShoppingList() {
-  const [search, setSearch] = useState("");
+  const params = useLocalSearchParams();
+  // Use param, or global, or blank
+  const getInitialSearch = () => {
+    if (typeof params.search === 'string') return params.search;
+    if (typeof global !== 'undefined' && typeof global.__SHOPPING_LIST_SEARCH__ === 'string') return global.__SHOPPING_LIST_SEARCH__;
+    return "";
+  };
+  const [search, setSearch] = useState(getInitialSearch());
+
+  // Always update search from router param if it changes
+  useEffect(() => {
+    if (typeof params.search === 'string') {
+      setSearch(params.search);
+    }
+  }, [params.search]);
   const [searchResults, setSearchResults] = useState([]);
   const [listItems, setListItems] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -58,8 +101,13 @@ export default function ShoppingList() {
 
     // Search through products
     Object.entries(saveData.products).forEach(([id, product]) => {
-      if (product.name.toLowerCase().includes(searchLower) || 
-          product.category.toLowerCase().includes(searchLower)) {
+      const nameLower = product.name.toLowerCase();
+      const categoryLower = product.category.toLowerCase();
+      // Match only if name or category starts with the search string
+      if (
+        (searchLower && (nameLower.startsWith(searchLower) || categoryLower.startsWith(searchLower))) ||
+        (!searchLower) // Show all if search is empty
+      ) {
         results.push({
           id: `p${id}`,
           name: product.name,
@@ -72,7 +120,11 @@ export default function ShoppingList() {
 
     // Search through stalls
     Object.entries(saveData.stalls).forEach(([id, stall]) => {
-      if (stall.name.toLowerCase().includes(searchLower)) {
+      const nameLower = stall.name.toLowerCase();
+      if (
+        (searchLower && nameLower.startsWith(searchLower)) ||
+        (!searchLower)
+      ) {
         results.push({
           id: `s${id}`,
           name: stall.name,
@@ -150,12 +202,17 @@ export default function ShoppingList() {
     }
   };
 
+  // Handler for search input
+  const handleSearchChange = (val) => {
+    setSearch(val);
+  };
+
   return (
     <>
-      {/* Top HUD with SearchBar */}
+      {/* Top HUD with ShoppingListSearchBar */}
       <View style={styles.topHUD}>
         <View style={styles.hudSearchBar}>
-          <SearchBar />
+          <ShoppingListSearchBar value={search} onChange={handleSearchChange} />
         </View>
       </View>
       <View style={styles.container}>
@@ -283,6 +340,38 @@ export default function ShoppingList() {
 }
 
 const styles = StyleSheet.create({
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  filterSearchGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    flex: 1,
+    paddingLeft: 8,
+  },
+  searchLogo: {
+    width: 28,
+    height: 28,
+    resizeMode: "contain",
+    marginRight: 6,
+  },
+  searchWrapper: {
+    flex: 1,
+    position: "relative",
+  },
+  searchBox: {
+    height: 46,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#000",
+  },
   topHUD: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,7 +572,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0766AD',
+    backgroundColor: '#609966',
     padding: 16,
     borderRadius: 8,
     marginTop: 16,

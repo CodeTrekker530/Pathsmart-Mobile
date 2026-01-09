@@ -6,8 +6,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router"; // ⬅️ import router
 import ToolsDropdown from "./ToolsDropdown";
 
+// Global variable to store last search text
+if (typeof global !== 'undefined') {
+  global.__SHOPPING_LIST_SEARCH__ = global.__SHOPPING_LIST_SEARCH__ || "";
+}
+
 export default function SearchBar({ placeholder = "What are you looking for?" }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(typeof global !== 'undefined' ? global.__SHOPPING_LIST_SEARCH__ : "");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const router = useRouter();
 
@@ -29,8 +34,14 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
             placeholder={placeholder}
             placeholderTextColor="#999"
             value={text}
-            onChangeText={setText}
-            onSubmitEditing={() => router.push("/ShoppingList")} // ⬅️ ENTER goes to Shopping List
+            onChangeText={val => {
+              setText(val);
+              if (typeof global !== 'undefined') global.__SHOPPING_LIST_SEARCH__ = val;
+            }}
+            onSubmitEditing={() => {
+              if (typeof global !== 'undefined') global.__SHOPPING_LIST_SEARCH__ = text;
+              router.push({ pathname: "/ShoppingList", query: { search: text } });
+            }} // ⬅️ ENTER goes to Shopping List with search
             returnKeyType="search"
           />
         </View>

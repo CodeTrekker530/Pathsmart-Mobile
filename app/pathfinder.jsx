@@ -17,6 +17,27 @@ const xFilledPng = require('./assets/XFilled.png');
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function HomeScreen() {
+        // Pinpoint location selection state
+        const [pinpointMode, setPinpointMode] = React.useState(false);
+
+        // Helper: find closest node to (x, y)
+        function findClosestNode(x, y) {
+          const nodes = require('./utils/f1nodes.json').nodes;
+          let minDist = Infinity;
+          let closestId = null;
+          for (const [id, node] of Object.entries(nodes)) {
+            const dx = node.x - x;
+            const dy = node.y - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < minDist) {
+              minDist = dist;
+              closestId = id;
+            }
+          }
+          return closestId;
+        }
+      // Ref to suppress shopping list reordering when programmatically updating start node
+      const suppressReorderRef = React.useRef(false);
     // Normalize shopping list IDs to match saveData.json format
     function normalizeId(id) {
       if (typeof id !== 'string') id = String(id);
@@ -37,26 +58,43 @@ export default function HomeScreen() {
 
     // Re-optimize shopping list order whenever startNodeId or shoppingList changes
     React.useEffect(() => {
+      if (suppressReorderRef.current) {
+        suppressReorderRef.current = false;
+        return;
+      }
       if (startNodeId && shoppingList.length > 0) {
         const controller = PathfinderController.current;
         // Normalize all IDs for optimizer
         const idList = shoppingList.map(item => normalizeId(typeof item === 'object' && item.id ? item.id : item));
-        const sortedIds = controller.findOptimizedShoppingOrder(startNodeId, idList);
+        // Filter out marked items (checked or X)
+        const unmarkedIds = idList.filter(id => !checkedItems[id] && !xItems[id]);
+        const markedIds = idList.filter(id => checkedItems[id] || xItems[id]);
+        // Only optimize unmarked items
+        const sortedUnmarkedIds = controller.findOptimizedShoppingOrder(startNodeId, unmarkedIds);
         const isObjectList = typeof shoppingList[0] === 'object' && shoppingList[0].id;
         if (isObjectList) {
           // Map normalized IDs back to original objects
           const idToObj = Object.fromEntries(shoppingList.map(item => [normalizeId(item.id), item]));
-          const newList = sortedIds.map(id => idToObj[id]).filter(Boolean);
+          // Compose new list: sorted unmarked objects, then marked objects (in original order)
+          const sortedUnmarkedObjs = sortedUnmarkedIds.map(id => idToObj[id]).filter(Boolean);
+          const markedObjs = markedIds.map(id => idToObj[id]).filter(Boolean);
+          const newList = [...sortedUnmarkedObjs, ...markedObjs];
           const sameOrder = newList.length === shoppingList.length && newList.every((item, i) => item.id === shoppingList[i].id);
           console.log('[Optimized Shopping List]', newList.map(item => item.id));
           if (!sameOrder) {
             setShoppingList(newList);
+            setSelectedProductIndex(-0);
+            AsyncStorage.setItem('shoppingList', JSON.stringify(newList));
           }
         } else {
-          const sameOrder = sortedIds.length === shoppingList.length && sortedIds.every((id, i) => id === shoppingList[i]);
-          console.log('[Optimized Shopping List]', sortedIds);
+          // Compose new list: sorted unmarked IDs, then marked IDs (in original order)
+          const newList = [...sortedUnmarkedIds, ...markedIds];
+          const sameOrder = newList.length === shoppingList.length && newList.every((id, i) => id === shoppingList[i]);
+          console.log('[Optimized Shopping List]', newList);
           if (!sameOrder) {
-            setShoppingList(sortedIds);
+            setShoppingList(newList);
+            setSelectedProductIndex(0);
+            AsyncStorage.setItem('shoppingList', JSON.stringify(newList));
           }
         }
       }
@@ -71,21 +109,33 @@ export default function HomeScreen() {
   const [closestEndNode, setClosestEndNode] = React.useState(null);
   // Store both closestEndNode and the path to it
   const [closestPath, setClosestPath] = React.useState([]);
+  // Only update closestEndNode and closestPath when startNodeId changes (not selectedProductId)
   React.useEffect(() => {
-    if (startNodeId && selectedProductId) {
-      // Normalize product ID: replace multiple leading 'p's with a single 'p'
-      let normalizedId = selectedProductId.replace(/^p+/, 'p');
-      console.log('[Pathfinder] selectedProductId:', normalizedId, 'type:', typeof normalizedId);
-      const result = PathfinderController.current.findClosestStallAndEndNode(startNodeId, normalizedId);
-      setClosestEndNode(result.endNode);
-      setClosestPath(result.path || []);
-      console.log('[Closest stall_endNode]', result.endNode);
-      console.log('[Path to closest endNode]', result.path);
+    if (startNodeId && shoppingList.length > 0) {
+      // Use the first unmarked item in the shopping list for pathfinding
+      const firstUnmarked = shoppingList.find(item => {
+        const id = typeof item === 'object' && item.id ? item.id : item;
+        return !checkedItems[id] && !xItems[id];
+      });
+      if (firstUnmarked) {
+        let id = typeof firstUnmarked === 'object' && firstUnmarked.id ? firstUnmarked.id : firstUnmarked;
+        // Normalize product ID: replace multiple leading 'p's with a single 'p'
+        let normalizedId = id.replace(/^p+/, 'p');
+        console.log('[Pathfinder] selectedProductId:', normalizedId, 'type:', typeof normalizedId);
+        const result = PathfinderController.current.findClosestStallAndEndNode(startNodeId, normalizedId);
+        setClosestEndNode(result.endNode);
+        setClosestPath(result.path || []);
+        console.log('[Closest stall_endNode]', result.endNode);
+        console.log('[Path to closest endNode]', result.path);
+      } else {
+        setClosestEndNode(null);
+        setClosestPath([]);
+      }
     } else {
       setClosestEndNode(null);
       setClosestPath([]);
     }
-  }, [startNodeId, selectedProductId]);
+  }, [startNodeId, shoppingList, checkedItems, xItems]);
   const [path, setPath] = React.useState([]);
   const [selectedFloor, setSelectedFloor] = React.useState(1);
   const [dropdownVisible, setDropdownVisible] = React.useState(false);
@@ -140,6 +190,14 @@ export default function HomeScreen() {
       }
       return newX;
     });
+    // Find the current item's closest stall_endNode and set as new startNodeId
+    const controller = PathfinderController.current;
+    const normalizedId = normalizeId(id);
+    const result = controller.findClosestStallAndEndNode(startNodeId, normalizedId);
+    if (result && result.endNode) {
+      suppressReorderRef.current = true;
+      setStartNodeId(result.endNode);
+    }
     // Advance to next unmarked item
     setSelectedProductIndex((prevIdx) => {
       const len = shoppingList.length;
@@ -300,17 +358,19 @@ export default function HomeScreen() {
           onPress={() => setDropdownVisible(!dropdownVisible)}
         >
           <Ionicons name="location" size={18} color="white" />
-          <Text style={styles.setLocationText}>My Location</Text>
+          <Text style={styles.setLocationText}>Set Starting Location</Text>
         </TouchableOpacity>
         {dropdownVisible && (
           <View style={styles.locationDropdown}>
-            <TouchableOpacity style={styles.dropdownItem}>
+            <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+              setDropdownVisible(false);
+              setTimeout(() => setPinpointMode(true), 100); // ensure dropdown closes before activating mode
+            }}>
               <Text style={styles.dropdownText}>Pinpoint</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.dropdownItem}>
               <Text style={styles.dropdownText}>QR Code</Text>
             </TouchableOpacity>
-
           </View>
         )}
       </View>
@@ -333,13 +393,22 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      {/* Pinpoint mode overlay - centered above map, outside pan/zoom wrapper */}
+      {pinpointMode && (
+        <View style={styles.pinpointOverlay}>
+          <View style={styles.pinpointOverlayBox}>
+            <Text style={styles.pinpointOverlayText}>
+              Tap Anywhere To Pin Your Location
+            </Text>
+          </View>
+        </View>
+      )}
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={[styles.mapWrapper, animatedStyle]}>
           <MapSVG
             startNodeId={startNodeId}
             onStartPointPress={(nodeId) => {
               setStartNodeId(nodeId);
-              // Immediately optimize and log shopping list order with normalized IDs
               if (nodeId && shoppingList.length > 0) {
                 const controller = PathfinderController.current;
                 const idList = shoppingList.map(item => normalizeId(typeof item === 'object' && item.id ? item.id : item));
@@ -348,11 +417,11 @@ export default function HomeScreen() {
                 if (isObjectList) {
                   const idToObj = Object.fromEntries(shoppingList.map(item => [normalizeId(item.id), item]));
                   const newList = sortedIds.map(id => idToObj[id]).filter(Boolean);
-                  console.log('[Optimized Shopping List]', newList.map(item => item.id));
                   setShoppingList(newList);
+                  setSelectedProductIndex(-0);
                 } else {
-                  console.log('[Optimized Shopping List]', sortedIds);
                   setShoppingList(sortedIds);
+                  setSelectedProductIndex(0);
                 }
               }
             }}
@@ -360,6 +429,33 @@ export default function HomeScreen() {
             width={screenWidth}
             height={screenHeight}
             selectedProductId={selectedProductId}
+            pinpointMode={pinpointMode}
+            onPinpointTap={({ x, y }) => {
+              const closestNodeId = findClosestNode(x, y);
+              setStartNodeId(closestNodeId);
+              setPinpointMode(false);
+              if (closestNodeId && shoppingList.length > 0) {
+                const controller = PathfinderController.current;
+                const idList = shoppingList.map(item => normalizeId(typeof item === 'object' && item.id ? item.id : item));
+                const sortedUnmarkedIds = controller.findOptimizedShoppingOrder(closestNodeId, idList.filter(id => !checkedItems[id] && !xItems[id]));
+                const markedIds = idList.filter(id => checkedItems[id] || xItems[id]);
+                const isObjectList = typeof shoppingList[0] === 'object' && shoppingList[0].id;
+                if (isObjectList) {
+                  const idToObj = Object.fromEntries(shoppingList.map(item => [normalizeId(item.id), item]));
+                  const sortedUnmarkedObjs = sortedUnmarkedIds.map(id => idToObj[id]).filter(Boolean);
+                  const markedObjs = markedIds.map(id => idToObj[id]).filter(Boolean);
+                  const newList = [...sortedUnmarkedObjs, ...markedObjs];
+                  setShoppingList(newList);
+                  setSelectedProductIndex(-0);
+                  AsyncStorage.setItem('shoppingList', JSON.stringify(newList));
+                } else {
+                  const newList = [...sortedUnmarkedIds, ...markedIds];
+                  setShoppingList(newList);
+                  setSelectedProductIndex(0);
+                  AsyncStorage.setItem('shoppingList', JSON.stringify(newList));
+                }
+              }
+            }}
           />
         </Animated.View>
       </GestureDetector>
@@ -432,7 +528,7 @@ export default function HomeScreen() {
                       <Text style={styles.shoppingListItemCategory}>{item.category}</Text>
                     </View>
                     {deleteMode ? (
-                      <Text style={{ color: '#d33', fontWeight: 'bold', marginLeft: 8 }}>Click to remove</Text>
+                      <Text style={{ color: '#d33', fontWeight: 'bold', marginLeft: 8 }}>Tap to remove</Text>
                     ) : (
                       <>
                         <TouchableOpacity onPress={() => toggleChecked(item.id)} style={styles.shoppingListCheckbox}>
@@ -449,10 +545,10 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
           {/* Drawer bottom right: Delete mode toggle button */}
-          <View style={{ position: 'absolute', bottom: 24, right: 24, zIndex: 50 }}>
+          <View style={{ position: 'absolute', bottom: 40, right: 24, zIndex: 50 }}>
             <TouchableOpacity
               style={{
-                backgroundColor: deleteMode ? '#d33' : '#0766AD',
+                backgroundColor: deleteMode ? '#0766AD' : '#d33',
                 paddingHorizontal: 18,
                 paddingVertical: 12,
                 borderRadius: 24,
@@ -465,7 +561,7 @@ export default function HomeScreen() {
             >
               <Ionicons name="trash" size={20} color="white" />
               <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15 }}>
-                {deleteMode ? 'Tap items to delete' : 'Delete Items'}
+                {deleteMode ? 'Cancel' : 'Delete Items'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -475,6 +571,28 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  pinpointOverlay: {
+    position: 'absolute',
+    top: 170, // offset lower than before
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  pinpointOverlayBox: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    maxWidth: 340,
+  },
+  pinpointOverlayText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
     shoppingListItemRow: {
       flexDirection: 'row',
       alignItems: 'center',

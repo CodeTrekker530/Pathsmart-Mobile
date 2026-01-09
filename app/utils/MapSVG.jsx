@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import { Svg, G, Path, Line, Circle } from 'react-native-svg';
+import { Svg, G, Path, Line, Circle, Rect, Text } from 'react-native-svg';
 import { PathLine } from './mapRenderers';
 import React from 'react';
 import nodesData from './f1nodes.json';
@@ -15,6 +15,8 @@ const MapSVG = ({
   path = [],
   width,
   height,
+  pinpointMode = false,
+  onPinpointTap,
 }) => {
   const nodes = nodesData.nodes;
   // Instantiate controller once
@@ -107,12 +109,74 @@ const MapSVG = ({
     );
   };
 
+  // Handler for tap events in pinpoint mode
+  const handleMapPress = (event) => {
+    if (!pinpointMode || !onPinpointTap) return;
+    const { locationX, locationY } = event.nativeEvent;
+    // SVG viewBox: 2022 x 629 (landscape)
+    // Container: width x height (could be portrait)
+    // Calculate scale and letterboxing
+    const viewBoxWidth = 2022;
+    const viewBoxHeight = 629;
+    const containerWidth = width;
+    const containerHeight = height;
+    // Calculate scale to fit SVG inside container (contain, not cover)
+    const scale = Math.min(
+      containerWidth / viewBoxWidth,
+      containerHeight / viewBoxHeight
+    );
+    // Calculate actual rendered SVG size
+    const renderedSVGWidth = viewBoxWidth * scale;
+    const renderedSVGHeight = viewBoxHeight * scale;
+    // Calculate letterbox offset (centered)
+    const offsetX = (containerWidth - renderedSVGWidth) / 2;
+    const offsetY = (containerHeight - renderedSVGHeight) / 2;
+    // Only map taps inside the SVG area
+    if (
+      locationX < offsetX ||
+      locationX > offsetX + renderedSVGWidth ||
+      locationY < offsetY ||
+      locationY > offsetY + renderedSVGHeight
+    ) {
+      // Tap is outside SVG area, ignore
+      return;
+    }
+    // Convert locationX/Y to SVG coordinates
+    const svgX = ((locationX - offsetX) / renderedSVGWidth) * viewBoxWidth;
+    const svgY = ((locationY - offsetY) / renderedSVGHeight) * viewBoxHeight;
+    onPinpointTap({ x: svgX, y: svgY });
+  };
+
+  // List of predefined start points
+  const predefinedStartPoints = [
+    { id: 14, cx: 628, cy: 568 },
+    { id: 25, cx: 552, cy: 112 },
+    { id: 45, cx: 756, cy: 611 },
+    { id: 119, cx: 659, cy: 21 },
+    { id: 225, cx: 1251, cy: 611 },
+    { id: 104, cx: 1251, cy: 70 },
+    { id: 134, cx: 1309, cy: 611 },
+    { id: 207, cx: 1316, cy: 76 },
+    { id: 150, cx: 1991, cy: 611 },
+    { id: 194, cx: 1991, cy: 136 },
+  ];
+
+  // Check if current startNodeId is a predefined start point
+  const isPredefinedStart = predefinedStartPoints.some(pt => String(pt.id) === String(startNodeId));
+  // If not, get its coordinates from nodesData
+  let customStartCoords = null;
+  if (startNodeId && !isPredefinedStart && nodes[String(startNodeId)]) {
+    const node = nodes[String(startNodeId)];
+    customStartCoords = { cx: node.x, cy: node.y };
+  }
+
   return (
     <Svg
       width={width}
       height={height}
       viewBox="0 0 2022 629"
       style={{ backgroundColor: "white", flex: 1 }}
+      onPress={handleMapPress}
     >
       <G id="Group 3">
         <G id="boundaries">
@@ -254,26 +318,24 @@ const MapSVG = ({
       )}
 
       {/* Start Points (tappable, drawn after lines) */}
-      {[
-        { id: 14, cx: 628, cy: 568 },
-        { id: 25, cx: 552, cy: 112 },
-        { id: 45, cx: 756, cy: 611 },
-        { id: 119, cx: 659, cy: 21 },
-        { id: 225, cx: 1251, cy: 611 },
-        { id: 104, cx: 1251, cy: 70 },
-        { id: 134, cx: 1309, cy: 611 },
-        { id: 207, cx: 1316, cy: 76 },
-        { id: 150, cx: 1991, cy: 611 },
-        { id: 194, cx: 1991, cy: 136 },
-      ].map((pt) => (
+      {predefinedStartPoints.map((pt) => (
         <RenderStartPoint
           key={pt.id}
           id={pt.id}
           cx={pt.cx}
           cy={pt.cy}
-          isSelected={startNodeId === pt.id}
+          isSelected={String(startNodeId) === String(pt.id)}
         />
       ))}
+      {/* Custom start point indicator if not a predefined start point */}
+      {customStartCoords && (
+        <RenderStartPoint
+          id={startNodeId}
+          cx={customStartCoords.cx}
+          cy={customStartCoords.cy}
+          isSelected={true}
+        />
+      )}
     </Svg>
   );
 };

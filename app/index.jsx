@@ -52,7 +52,7 @@ export default function HomeScreen() {
 
   const handleTutorial = () => {
     // Navigate to tutorial screen (you can create this later)
-    router.push('/pathfinder');
+    router.push('/ShoppingList');
   };
 
   return (
