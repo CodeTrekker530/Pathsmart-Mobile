@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import { View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Svg, Rect, Path } from 'react-native-svg';
@@ -8,6 +8,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 
 import MapSVG from './utils/MapSVG';
 import SearchBar from './components/searchBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import QRCodeScanner from './utils/QRCodeScanner';
 
 const checkboxOutlinePng = require('./assets/CheckboxOutline.png');
 const checkboxFilledPng = require('./assets/CheckboxFilled.png');
@@ -19,7 +20,45 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function HomeScreen() {
         // Pinpoint location selection state
         const [pinpointMode, setPinpointMode] = React.useState(false);
-
+        const [qrMode, setQrMode] = React.useState(false);
+        
+        // Handle QR scan result
+        const handleQrScan = (data) => {
+          // Close scanner first
+          setQrMode(false);
+          if (!data) return;
+          try {
+            // Try to parse as integer and use as startNodeId
+            const intValue = parseInt(data, 10);
+            if (!Number.isNaN(intValue)) {
+              setStartNodeId(intValue);
+              Alert.alert('QR Code Scanned', `Start Node ID set to: ${intValue}`);
+              return;
+            }
+            // Try to interpret scanned data as a node id
+            const nodes = require('./utils/f1nodes.json').nodes;
+            if (nodes[data]) {
+              setStartNodeId(data);
+              return;
+            }
+            // If scanned data looks like coordinates "x,y"
+            if (typeof data === 'string' && data.includes(',')) {
+              const parts = data.split(',').map(s => parseFloat(s.trim()));
+              if (parts.length >= 2 && parts.every(n => !Number.isNaN(n))) {
+                const [x, y] = parts;
+                const closest = findClosestNode(x, y);
+                if (closest) setStartNodeId(closest);
+                return;
+              }
+            }
+            // Fallback: show simple alert with scanned text
+            Alert.alert('QR Scanned', String(data));
+          } catch (e) {
+            console.warn('[QR] parse error', e);
+            Alert.alert('QR Scanned', String(data));
+          }
+        };
+        
         // Helper: find closest node to (x, y)
         function findClosestNode(x, y) {
           const nodes = require('./utils/f1nodes.json').nodes;
@@ -351,6 +390,25 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* QR Code Scanner Modal */}
+      <Modal
+        visible={qrMode}
+        animationType="slide"
+        onRequestClose={() => setQrMode(false)}
+        transparent={false}
+      >
+        <View style={{ flex: 1, backgroundColor: 'black' }}>
+          <QRCodeScanner onScan={handleQrScan} />
+          <View style={{ position: 'absolute', top: 48, left: 16, zIndex: 50 }}>
+            <TouchableOpacity
+              style={{ backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 8 }}
+              onPress={() => setQrMode(false)}
+            >
+              <Ionicons name="close" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {/* Floating Top Left - Set Location Button with Dropdown */}
       <View style={styles.floatingTopLeft}>
         <TouchableOpacity 
@@ -368,7 +426,10 @@ export default function HomeScreen() {
             }}>
               <Text style={styles.dropdownText}>Pinpoint</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.dropdownItem}>
+            <TouchableOpacity style={styles.dropdownItem} onPress={() => {
+              setDropdownVisible(false);
+              setTimeout(() => setQrMode(true), 150);
+            }}>
               <Text style={styles.dropdownText}>QR Code</Text>
             </TouchableOpacity>
           </View>
