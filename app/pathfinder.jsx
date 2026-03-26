@@ -32,7 +32,26 @@ export default function HomeScreen() {
             const intValue = parseInt(data, 10);
             if (!Number.isNaN(intValue)) {
               setStartNodeId(intValue);
-              Alert.alert('QR Code Scanned', `Start Node ID set to: ${intValue}`);
+              // Optimize shopping list order from this starting point
+              if (intValue && shoppingList.length > 0) {
+                const controller = PathfinderController.current;
+                const idList = shoppingList.map(item => normalizeId(typeof item === 'object' && item.id ? item.id : item));
+                const sortedUnmarkedIds = controller.findOptimizedShoppingOrder(intValue, idList.filter(id => !checkedItems[id] && !xItems[id]));
+                const markedIds = idList.filter(id => checkedItems[id] || xItems[id]);
+                const isObjectList = typeof shoppingList[0] === 'object' && shoppingList[0].id;
+                if (isObjectList) {
+                  const idToObj = Object.fromEntries(shoppingList.map(item => [normalizeId(item.id), item]));
+                  const sortedUnmarkedObjs = sortedUnmarkedIds.map(id => idToObj[id]).filter(Boolean);
+                  const markedObjs = markedIds.map(id => idToObj[id]).filter(Boolean);
+                  const newList = [...sortedUnmarkedObjs, ...markedObjs];
+                  setShoppingList(newList);
+                  setSelectedProductIndex(0);
+                } else {
+                  const newList = [...sortedUnmarkedIds, ...markedIds];
+                  setShoppingList(newList);
+                  setSelectedProductIndex(0);
+                }
+              }
               return;
             }
             // Try to interpret scanned data as a node id
@@ -261,6 +280,8 @@ export default function HomeScreen() {
   const lastTranslateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const scaleOffset = useSharedValue(1);
+  const rotation = useSharedValue(0);
+  const rotationOffset = useSharedValue(0);
 
   // Pan gesture
   const panGesture = Gesture.Pan()
@@ -284,8 +305,17 @@ export default function HomeScreen() {
       scale.value = scaleOffset.value;
     });
 
+  // Rotation gesture
+  const rotationGesture = Gesture.Rotation()
+    .onUpdate((event) => {
+      rotation.value = rotationOffset.value + event.rotation;
+    })
+    .onEnd(() => {
+      rotationOffset.value = rotation.value;
+    });
+
   // Compose gestures
-  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
+  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture, rotationGesture);
 
   // Animated style
   const animatedStyle = useAnimatedStyle(() => ({
@@ -293,6 +323,7 @@ export default function HomeScreen() {
       { scale: scale.value },
       { translateX: translateX.value },
       { translateY: translateY.value },
+      { rotate: `${rotation.value}rad` },
     ],
   }));
 
