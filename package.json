@@ -18,7 +18,7 @@
     "bcryptjs": "^3.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
-    "expo": "~53.0.25",
+    "expo": "~53.0.27",
     "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "~16.1.11",
     "expo-constants": "~17.1.7",
@@ -26,7 +26,8 @@
     "expo-image-picker": "^16.1.4",
     "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.7",
-    "expo-router": "~5.1.10",
+    "expo-router": "~5.1.11",
+    "expo-sqlite": "~15.2.14",
     "expo-status-bar": "~2.2.3",
     "js-cookie": "^3.0.5",
     "prettier": "^3.6.2",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~19.0.10",
+    "@types/react-native": "^0.72.8",
     "baseline-browser-mapping": "^2.9.4",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~9.2.0"

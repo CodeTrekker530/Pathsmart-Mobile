@@ -5,7 +5,7 @@ import { PathLine } from './mapRenderers';
 import React from 'react';
 import nodesData from './f1nodes.json';
 
-import PathfinderController from '../PathfinderController';
+import PathfinderController from '../../backend/PathfinderController';
 
 const MapSVG = ({
   selectedItem,

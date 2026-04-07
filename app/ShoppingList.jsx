@@ -6,11 +6,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 import saveData from './utils/saveData.json';
+import ToolsDropdown from "./components/ToolsDropdown";
 
 // Local search bar for ShoppingList
 function ShoppingListSearchBar({ value, onChange, placeholder = "Search your list..." }) {
 
 const router = useRouter();
+const [dropdownVisible, setDropdownVisible] = useState(false);
 
   return (
     <View style={styles.searchBarContainer}>
@@ -31,6 +33,26 @@ const router = useRouter();
             returnKeyType="search"
           />
         </View>
+      </View>
+      {/* Sync Button */}
+      <TouchableOpacity
+        style={styles.syncButton}
+        onPress={() => {
+          // TODO: Implement sync functionality
+          console.log('Sync pressed');
+        }}
+      >
+        <Ionicons name="sync-outline" size={22} color="#000" />
+      </TouchableOpacity>
+      {/* Options Button */}
+      <View style={{ position: "relative", zIndex: 999 }}>
+        <TouchableOpacity
+          style={styles.optionsButton}
+          onPress={() => setDropdownVisible((v) => !v)}
+        >
+          <Ionicons name="ellipsis-vertical" size={22} color="#000" />
+        </TouchableOpacity>
+        <ToolsDropdown visible={dropdownVisible} onClose={() => setDropdownVisible(false)} />
       </View>
     </View>
   );
@@ -211,6 +233,9 @@ export default function ShoppingList() {
     <>
       {/* Top HUD with ShoppingListSearchBar */}
       <View style={styles.topHUD}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#000" />
+        </TouchableOpacity>
         <View style={styles.hudSearchBar}>
           <ShoppingListSearchBar value={search} onChange={handleSearchChange} />
         </View>
@@ -345,6 +370,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     marginHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   filterSearchGroup: {
     flexDirection: "row",
@@ -371,6 +401,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#000",
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  optionsButton: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  syncButton: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+    marginRight: 10,
   },
   topHUD: {
     flexDirection: 'row',
@@ -399,7 +451,7 @@ const styles = StyleSheet.create({
   },
   drawerButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 50,
     right: 20,
     width: 60,
     height: 60,
@@ -415,11 +467,15 @@ const styles = StyleSheet.create({
   },
   drawerButtonText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: 'bold',
     position: 'absolute',
-    top: 4,
+    top: 1,
     right: 6,
+    backgroundColor: 'rgb(222, 41, 41)',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   drawerOverlay: {
     flex: 1,

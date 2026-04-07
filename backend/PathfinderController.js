@@ -4,9 +4,9 @@
 // It does not use Flask or any backend server; all logic is in-memory and synchronous.
 // Assumes f1nodes.json, connections.json, and saveData.json are available in the app/utils directory.
 
-import nodesData from './utils/f1nodes.json';
-import connectionsData from './utils/connections.json';
-import saveData from './utils/saveData.json';
+import nodesData from '../app/utils/f1nodes.json';
+import connectionsData from '../app/utils/connections.json';
+import saveData from '../app/utils/saveData.json';
 
 class PathfinderController {
               /**

@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
-import { supabase } from "../backend/supabaseClient";
+import { supabase } from "./supabaseClient";
 
 export default function QualityGuide() {
   const router = useRouter();

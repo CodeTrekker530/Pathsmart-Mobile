@@ -18,17 +18,16 @@ export default function ToolsDropdown({ visible, onClose, dropdownStyle }) {
         <View style={[styles.dropdown, dropdownStyle]}>
           <TouchableOpacity
             style={styles.itemRow}
-            onPress={() => { router.push("/ShoppingList"); onClose(); }}
-          >
-            <Ionicons name="list-outline" size={20} color="#222" style={styles.icon} />
-            <Text style={styles.item}>Shopping List</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.itemRow}
             onPress={() => { router.push("/QualityGuide"); onClose(); }}
           >
             <Ionicons name="book-outline" size={20} color="#222" style={styles.icon} />
             <Text style={styles.item}>Quality Guide</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.itemRow}
+          >
+            <Ionicons name="help-circle-outline" size={24} color="#222" style={styles.icon} />
+            <Text style={styles.item}>Help</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

@@ -4,7 +4,7 @@ import { View, StyleSheet, Dimensions, Image, Text, TouchableOpacity, ScrollView
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Svg, Rect, Path } from 'react-native-svg';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import MapSVG from './utils/MapSVG';
 import SearchBar from './components/searchBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,7 @@ const xOutlinePng = require('./assets/XOutline.png');
 const xFilledPng = require('./assets/XFilled.png');
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const MAP_RENDER_SCALE = 2;
 
 export default function HomeScreen() {
         // Pinpoint location selection state
@@ -160,7 +161,7 @@ export default function HomeScreen() {
   const [startNodeId, setStartNodeId] = React.useState(null);
   const PathfinderController = React.useRef(null);
   if (!PathfinderController.current) {
-    PathfinderController.current = new (require('./PathfinderController').default)();
+    PathfinderController.current = new (require('../backend/PathfinderController').default)();
   }
 
   // Log closest stall_endNode when startNodeId or selectedProductId changes
@@ -201,6 +202,7 @@ export default function HomeScreen() {
   const [shoppingList, setShoppingList] = React.useState([]);
   const [checkedItems, setCheckedItems] = React.useState({});
   const [xItems, setXItems] = React.useState({});
+  const [mapZoom, setMapZoom] = React.useState(1);
   // Selected product index for info row
   const [selectedProductIndex, setSelectedProductIndex] = React.useState(0);
   const [deleteMode, setDeleteMode] = React.useState(false);
@@ -286,7 +288,7 @@ export default function HomeScreen() {
   // Pan gesture
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
-      const currentScale = scale.value || 1;
+      const currentScale = (scale.value || 1) / MAP_RENDER_SCALE;
       translateX.value = lastTranslateX.value + event.translationX / currentScale;
       translateY.value = lastTranslateY.value + event.translationY / currentScale;
     })
@@ -320,12 +322,21 @@ export default function HomeScreen() {
   // Animated style
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
+      { scale: scale.value / MAP_RENDER_SCALE },
       { translateX: translateX.value },
       { translateY: translateY.value },
       { rotate: `${rotation.value}rad` },
     ],
   }));
+
+  useAnimatedReaction(
+    () => Math.max(0.5 / MAP_RENDER_SCALE, Math.min(8 / MAP_RENDER_SCALE, scale.value / MAP_RENDER_SCALE)),
+    (current, previous) => {
+      if (previous == null || Math.abs(current - previous) >= 0.15) {
+        runOnJS(setMapZoom)(Number(current.toFixed(2)));
+      }
+    }
+  );
 
   // Drawer state
   const windowHeight = screenHeight;
@@ -520,6 +531,8 @@ export default function HomeScreen() {
             path={closestPath}
             width={screenWidth}
             height={screenHeight}
+            renderScale={MAP_RENDER_SCALE}
+            zoomScale={mapZoom}
             selectedProductId={selectedProductId}
             pinpointMode={pinpointMode}
             onPinpointTap={({ x, y }) => {
@@ -722,7 +735,12 @@ const styles = StyleSheet.create({
       padding: 4,
     },
   container: { flex: 1, backgroundColor: '#f0f0f0' },
-  mapWrapper: { flex: 1 },
+  mapWrapper: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
   topHUD: {
     position: 'absolute',
     top: 10,

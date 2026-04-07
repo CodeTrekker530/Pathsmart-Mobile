@@ -32,7 +32,7 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
           <TextInput
             style={styles.searchBox}
             placeholder={placeholder}
-            placeholderTextColor="#999"
+            placeholderTextColor="#909090"
             value={text}
             onChangeText={val => {
               setText(val);
@@ -46,8 +46,18 @@ export default function SearchBar({ placeholder = "What are you looking for?" })
           />
         </View>
       </View>
+      {/* Sync Button */}
+      <TouchableOpacity
+        style={styles.syncButton}
+        onPress={() => {
+          // TODO: Implement sync functionality
+          console.log('Sync pressed');
+        }}
+      >
+        <Ionicons name="sync-outline" size={22} color="#000" />
+      </TouchableOpacity>
       {/* Options Button */}
-      <View style={{ position: "relative", zIndex: 999, marginLeft: 12 }}>
+      <View style={{ position: "relative", zIndex: 999 }}>
         <TouchableOpacity
           style={styles.optionsButton}
           onPress={() => setDropdownVisible((v) => !v)}
@@ -75,10 +85,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  syncButton: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+    marginRight: 10,
+  },
   filterSearchGroup: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ededed",
     borderRadius: 10,
     flex: 1,
     paddingLeft: 8,
@@ -95,7 +115,7 @@ const styles = StyleSheet.create({
   },
   searchBox: {
     height: 46,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ededed",
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
