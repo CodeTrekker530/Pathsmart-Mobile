@@ -38,7 +38,8 @@
     "p36": { "name": "Textile", "category": "Textile" },
     "p37": { "name": "Uniform", "category": "Clothing" },
     "p38": { "name": "Upholstery Supplies", "category": "Supplies" },
-    "p39": { "name": "Wrist Watch", "category": "Accessories" }
+    "p39": { "name": "Wrist Watch", "category": "Accessories" },
+    "p40": { "name": "test", "category": "Accessories" }
   },
 
   "stalls": {
@@ -61,7 +62,7 @@
       "stall_endNode": [5]
     },
     "4": {
-      "name": "Merchandise",
+      "name": "Merchandise 1",
       "nodes": [4],
       "products": ["p23"],
       "stall_endNode": [6]
@@ -110,7 +111,7 @@
       "stall_endNode": [11]
 },
     "12": {
-      "name": "Merchandise",
+      "name": "Merchandise 2",
       "nodes": [12],
       "products": ["p23"],
       "stall_endNode": [16]
@@ -1023,8 +1024,6 @@
       "nodes": [150],
       "products": ["p20"],
       "stall_endNode": [136]
-
-
 },
     "151": {
       "name": "Grain Stall 1",
@@ -1125,7 +1124,7 @@
     "166": {
       "name": "Grain Stall 1",
       "nodes": [166],
-      "products": ["p23"],
+      "products": ["p23", "p40"],
       "stall_endNode": [86]
 },
     "167": {

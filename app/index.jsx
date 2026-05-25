@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { initDatabase } from '../backend/database.js';
 import SearchBar from './components/searchBar';
 import CategoryButton from './components/CategoryButton';
 
@@ -17,6 +18,14 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
+
+  useEffect(() => {
+    try {
+      initDatabase();
+    } catch (error) {
+      console.error('Failed to initialize database:', error);
+    }
+  }, []);
 
   const categories = [
     { 
@@ -46,8 +55,8 @@ export default function HomeScreen() {
   ];
 
   const handleCategoryPress = (category) => {
-    // Navigate to map with category filter or handle category selection
-    router.push('/pathfinder');
+    // Navigate to ShoppingList with category name as search query
+    router.push(`/ShoppingList?search=${category.name}`);
   };
 
   const handleTutorial = () => {

@@ -1,18 +1,20 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Animated, PanResponder, Modal, Dimensions, TextInput } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Animated, PanResponder, Modal, Dimensions, TextInput, Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import SyncModal from "./components/SyncModal";
+import { syncProducts, syncStalls, getAllProducts, getAllStalls } from "./services/syncService";
 
-import saveData from './utils/saveData.json';
 import ToolsDropdown from "./components/ToolsDropdown";
 
 // Local search bar for ShoppingList
-function ShoppingListSearchBar({ value, onChange, placeholder = "Search your list..." }) {
+function ShoppingListSearchBar({ value, onChange, placeholder = "What are you looking for?" }) {
 
 const router = useRouter();
 const [dropdownVisible, setDropdownVisible] = useState(false);
+const [syncModalVisible, setSyncModalVisible] = useState(false);
 
   return (
     <View style={styles.searchBarContainer}>
@@ -37,10 +39,8 @@ const [dropdownVisible, setDropdownVisible] = useState(false);
       {/* Sync Button */}
       <TouchableOpacity
         style={styles.syncButton}
-        onPress={() => {
-          // TODO: Implement sync functionality
-          console.log('Sync pressed');
-        }}
+        onPress={() => setSyncModalVisible(true)}
+
       >
         <Ionicons name="sync-outline" size={22} color="#000" />
       </TouchableOpacity>
@@ -54,6 +54,26 @@ const [dropdownVisible, setDropdownVisible] = useState(false);
         </TouchableOpacity>
         <ToolsDropdown visible={dropdownVisible} onClose={() => setDropdownVisible(false)} />
       </View>
+
+      <SyncModal
+        visible={syncModalVisible}
+        onCancel={() => setSyncModalVisible(false)}
+        onConfirm={async () => {
+          setSyncModalVisible(false);
+          
+          try {
+            Alert.alert("Syncing", "Fetching latest data...");
+            const productResult = await syncProducts();
+            const stallResult = await syncStalls();
+            Alert.alert(
+              "Sync Complete",
+              `Synced ${productResult.count} products and ${stallResult.stallCount} stalls`
+            );
+          } catch (error) {
+            Alert.alert("Sync Failed", error.message || "Failed to sync data");
+          }
+        }}
+      />
     </View>
   );
 }
@@ -121,17 +141,19 @@ export default function ShoppingList() {
     const searchLower = searchTerm.toLowerCase();
     let results = [];
 
-    // Search through products
-    Object.entries(saveData.products).forEach(([id, product]) => {
+    // Search through products from SQLite
+    const products = getAllProducts();
+    products.forEach((product) => {
+      if (!product.name) return; // Skip if name is null
       const nameLower = product.name.toLowerCase();
-      const categoryLower = product.category.toLowerCase();
+      const categoryLower = (product.category || '').toLowerCase();
       // Match only if name or category starts with the search string
       if (
         (searchLower && (nameLower.startsWith(searchLower) || categoryLower.startsWith(searchLower))) ||
         (!searchLower) // Show all if search is empty
       ) {
         results.push({
-          id: `p${id}`,
+          id: product.id,
           name: product.name,
           category: product.category,
           type: 'Product',
@@ -140,19 +162,21 @@ export default function ShoppingList() {
       }
     });
 
-    // Search through stalls
-    Object.entries(saveData.stalls).forEach(([id, stall]) => {
-      const nameLower = stall.name.toLowerCase();
+    // Search through stalls from SQLite
+    const stalls = getAllStalls();
+    stalls.forEach((stall) => {
+      if (!stall.stall_name) return; // Skip if stall_name is null
+      const nameLower = stall.stall_name.toLowerCase();
       if (
         (searchLower && nameLower.startsWith(searchLower)) ||
         (!searchLower)
       ) {
         results.push({
-          id: `s${id}`,
-          name: stall.name,
+          id: `s${stall.stall_id}`,
+          name: stall.stall_name,
           category: 'Stall',
           type: 'Stall',
-          node_id: stall.nodes[0],
+          node_id: stall.node_id,
           image: 'image.png'
         });
       }
@@ -233,9 +257,6 @@ export default function ShoppingList() {
     <>
       {/* Top HUD with ShoppingListSearchBar */}
       <View style={styles.topHUD}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
         <View style={styles.hudSearchBar}>
           <ShoppingListSearchBar value={search} onChange={handleSearchChange} />
         </View>
@@ -299,6 +320,7 @@ export default function ShoppingList() {
           <Text style={styles.drawerButtonText}>{listItems.length}</Text>
         </TouchableOpacity>
       </View>
+      
 
       {/* Shopping List Drawer */}
       <Modal
@@ -401,10 +423,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#000",
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
   },
   optionsButton: {
     height: 20,

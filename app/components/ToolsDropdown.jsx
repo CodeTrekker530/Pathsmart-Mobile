@@ -18,7 +18,8 @@ export default function ToolsDropdown({ visible, onClose, dropdownStyle }) {
         <View style={[styles.dropdown, dropdownStyle]}>
           <TouchableOpacity
             style={styles.itemRow}
-            onPress={() => { router.push("/QualityGuide"); onClose(); }}
+            // onPress={() => { router.push("/QualityGuide"); onClose(); }}
+               onPress={() => { router.push("/tempdb"); onClose(); }}
           >
             <Ionicons name="book-outline" size={20} color="#222" style={styles.icon} />
             <Text style={styles.item}>Quality Guide</Text>

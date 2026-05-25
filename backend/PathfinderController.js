@@ -2,11 +2,12 @@
 // PathfinderController.js
 // This is a JavaScript/TypeScript translation of the Python pathfinder.py logic for use in React Native (mobile/offline)
 // It does not use Flask or any backend server; all logic is in-memory and synchronous.
-// Assumes f1nodes.json, connections.json, and saveData.json are available in the app/utils directory.
+// Assumes f1nodes.json and connections.json are available in the app/utils directory.
+// Uses SQLite for stalls and products data.
 
 import nodesData from '../app/utils/f1nodes.json';
 import connectionsData from '../app/utils/connections.json';
-import saveData from '../app/utils/saveData.json';
+import { getAllStallsWithProducts } from '../app/services/syncService';
 
 class PathfinderController {
               /**
@@ -250,7 +251,8 @@ class PathfinderController {
   constructor() {
     this.nodes = nodesData.nodes;
     this.connections = connectionsData.connections;
-    this.saveData = saveData;
+    this.saveData = { stalls: getAllStallsWithProducts() };
+    console.log("[PathfinderController] Loaded stalls:", this.saveData.stalls);
     this.resetState();
   }
 
