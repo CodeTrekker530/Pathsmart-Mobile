@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Svg, G, Line, Circle, Text, Path } from 'react-native-svg';
 import React from 'react';
-import saveData from './saveData.json';
 
 const START_POINT_RADIUS = 20;
 const HIGHLIGHT_COLOR = '#609966';

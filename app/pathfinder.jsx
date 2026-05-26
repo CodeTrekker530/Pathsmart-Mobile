@@ -9,6 +9,7 @@ import MapSVG from './utils/MapSVG';
 import SearchBar from './components/searchBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCodeScanner from './utils/QRCodeScanner';
+import nodesData from './utils/f1nodes.json';
 
 const checkboxOutlinePng = require('./assets/CheckboxOutline.png');
 const checkboxFilledPng = require('./assets/CheckboxFilled.png');
@@ -197,7 +198,6 @@ export default function HomeScreen() {
   }, [startNodeId, shoppingList, checkedItems, xItems]);
   const [path, setPath] = React.useState([]);
   const [selectedFloor, setSelectedFloor] = React.useState(1);
-  const [dropdownVisible, setDropdownVisible] = React.useState(false);
   // Shopping list state
   const [shoppingList, setShoppingList] = React.useState([]);
   const [checkedItems, setCheckedItems] = React.useState({});
@@ -318,6 +318,48 @@ export default function HomeScreen() {
 
   // Compose gestures
   const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture, rotationGesture);
+
+  // Find North - reset rotation to 0
+  const findNorth = () => {
+    rotationOffset.value = withSpring(0);
+    rotation.value = withSpring(0);
+  };
+
+  // Recenter - move to start point and zoom
+  const recenter = () => {
+    if (!startNodeId) {
+      Alert.alert('No Start Point', 'Please set a starting location first.');
+      return;
+    }
+
+    const nodes = nodesData.nodes;
+    const startNode = nodes[String(startNodeId)];
+    
+    if (!startNode) return;
+
+    // SVG dimensions and viewBox
+    const viewBoxWidth = 2022;
+    const viewBoxHeight = 629;
+    const mapWidth = screenWidth;
+    const mapHeight = screenHeight - 200; // Approximate map area height
+
+    // Calculate center of screen in SVG coordinates
+    const screenCenterX = viewBoxWidth / 2;
+    const screenCenterY = viewBoxHeight / 2;
+
+    // Calculate translation to center start point
+    const offsetX = (mapWidth / 2) / (scale.value / MAP_RENDER_SCALE);
+    const offsetY = (mapHeight / 2) / (scale.value / MAP_RENDER_SCALE);
+
+    lastTranslateX.value = withSpring(offsetX - startNode.x);
+    translateX.value = withSpring(offsetX - startNode.x);
+    lastTranslateY.value = withSpring(offsetY - startNode.y);
+    translateY.value = withSpring(offsetY - startNode.y);
+
+    // Zoom in a bit (1.5x)
+    scaleOffset.value = withSpring(1.5);
+    scale.value = withSpring(1.5);
+  };
 
   // Animated style
   const animatedStyle = useAnimatedStyle(() => ({
@@ -451,31 +493,24 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-      {/* Floating Top Left - Set Location Button with Dropdown */}
+      {/* Floating Top Left - Set Location Buttons */}
       <View style={styles.floatingTopLeft}>
         <TouchableOpacity 
-          style={styles.setLocationButton}
-          onPress={() => setDropdownVisible(!dropdownVisible)}
+          style={styles.locationButton}
+          onPress={() => {
+            setTimeout(() => setPinpointMode(true), 100);
+          }}
         >
-          <Ionicons name="location" size={18} color="white" />
-          <Text style={styles.setLocationText}>Set Starting Location</Text>
+          <Ionicons name="pin" size={18} color="#0766AD" />
         </TouchableOpacity>
-        {dropdownVisible && (
-          <View style={styles.locationDropdown}>
-            <TouchableOpacity style={styles.dropdownItem} onPress={() => {
-              setDropdownVisible(false);
-              setTimeout(() => setPinpointMode(true), 100); // ensure dropdown closes before activating mode
-            }}>
-              <Text style={styles.dropdownText}>Pinpoint</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.dropdownItem} onPress={() => {
-              setDropdownVisible(false);
-              setTimeout(() => setQrMode(true), 150);
-            }}>
-              <Text style={styles.dropdownText}>QR Code</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <TouchableOpacity 
+          style={styles.locationButton}
+          onPress={() => {
+            setTimeout(() => setQrMode(true), 150);
+          }}
+        >
+          <Ionicons name="qr-code" size={18} color="#0766AD" />
+        </TouchableOpacity>
       </View>
 
       {/* Floating Top Right - Floor Buttons */}
@@ -496,12 +531,22 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Floating Bottom Right - Map Controls */}
+      <View style={styles.floatingBottomRight}>
+        <TouchableOpacity style={styles.mapControlButton} onPress={findNorth}>
+          <Ionicons name="compass" size={20} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.mapControlButton} onPress={recenter}>
+          <Ionicons name="locate" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
       {/* Pinpoint mode overlay - centered above map, outside pan/zoom wrapper */}
       {pinpointMode && (
         <View style={styles.pinpointOverlay}>
           <View style={styles.pinpointOverlayBox}>
             <Text style={styles.pinpointOverlayText}>
-              Tap Anywhere To Pin Your Location
+              Tap Anywhere To Pin Your Start Location
             </Text>
           </View>
         </View>
@@ -678,7 +723,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   pinpointOverlay: {
     position: 'absolute',
-    top: 170, // offset lower than before
+    top: 120, // offset lower than before
     left: 0,
     right: 0,
     zIndex: 100,
@@ -861,11 +906,13 @@ const styles = StyleSheet.create({
     top: 125,
     left: 15,
     zIndex: 15,
+    gap: 8,
+    flexDirection: 'column',
   },
-  setLocationButton: {
+  locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0766AD',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 5,
@@ -875,32 +922,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
-  },
-  setLocationText: {
-    color: 'white',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  locationDropdown: {
-    marginTop: 8,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    overflow: 'hidden',
-  },
-  dropdownItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  dropdownText: {
-    fontSize: 13,
-    color: '#333',
   },
   floatingTopRight: {
     position: 'absolute',
@@ -936,5 +957,26 @@ const styles = StyleSheet.create({
   },
   floorButtonTextActive: {
     color: 'white',
+  },
+  floatingBottomRight: {
+    position: 'absolute',
+    bottom: 160,
+    right: 15,
+    zIndex: 15,
+    gap: 8,
+    flexDirection: 'column',
+  },
+  mapControlButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#0766AD',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
   },
 });

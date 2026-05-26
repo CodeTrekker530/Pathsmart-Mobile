@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
-export default function QRCodeScanner({ onScan }) {
+export default function QRCodeScanner({ onScan, purpose = "This QR code is used to set your starting location" }) {
   const [scanned, setScanned] = useState(false);
   const [scannedValue, setScannedValue] = useState(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -35,6 +35,7 @@ export default function QRCodeScanner({ onScan }) {
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
       <View style={styles.overlay} pointerEvents="none">
+        <Text style={styles.purposeText}>{purpose}</Text>
         <View style={styles.guideBox} />
         <Text style={styles.instructionText}>Align QR code inside the frame</Text>
         {scanned && (
@@ -61,6 +62,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.15)',
+    flexDirection: 'column',
+  },
+  purposeText: {
+    color: 'white',
+    fontSize: 18,
+    marginBottom: 30,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    fontWeight: '500',
   },
   guideBox: {
     width: 250,
@@ -72,7 +82,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     marginTop: 20,
     textAlign: 'center',
   },

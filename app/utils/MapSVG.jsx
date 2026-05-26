@@ -31,7 +31,7 @@ const MapSVG = ({
   // Keep the SVG dimensions in sync with the container to avoid oversized paper geometry
   const svgWidth = width;
   const svgHeight = height;
-  const boundaryStrokeWidth = zoomScale >= 2 ? 1.5 : 2;
+  const boundaryStrokeWidth = 0.4; // adjust stroke width based on zoom to keep it visually consistent
 
   // Force auxiliary details to always render (no zoom threshold gating)
   const showAuxiliaryDetails = true;
@@ -191,10 +191,10 @@ const MapSVG = ({
       onPress={handleMapPress}
     >
 <G id="Group 10">
-<Path id="boundary" d="M663.924 571.569L613.967 578H427.703L407.392 558.184L137.817 128.362L579.587 50.0801L663.924 571.569Z" stroke="#646464" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
-<Path id="boundary 2" d="M1279.96 47.9541L1272.5 129.955L1272.5 129.976V129.997L1269.5 629H766.426L666.572 10.9092L727.522 0.50293L1279.96 47.9541Z" stroke="#646464" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
-<Path id="boundary 3" d="M2016 115.456V628.5H1316V132.529L1324.94 53.042L2016 115.456Z" stroke="#646464" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
-<Path id="boundary 4" d="M673.409 625.982L383.514 618L383.473 617.999L383.433 618.005L324.741 625.963L0.771484 144.751L121.625 100.985L575.587 25.0752L673.409 625.982Z" stroke="#646464" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
+<Path id="boundary" d="M663.924 571.569L613.967 578H427.703L407.392 558.184L137.817 128.362L579.587 50.0801L663.924 571.569Z" stroke="#000000" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
+<Path id="boundary 2" d="M1279.96 47.9541L1272.5 129.955L1272.5 129.976V129.997L1269.5 629H766.426L666.572 10.9092L727.522 0.50293L1279.96 47.9541Z" stroke="#000000" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
+<Path id="boundary 3" d="M2016 115.456V628.5H1316V132.529L1324.94 53.042L2016 115.456Z" stroke="#000000" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
+<Path id="boundary 4" d="M673.409 625.982L383.514 618L383.473 617.999L383.433 618.005L324.741 625.963L0.771484 144.751L121.625 100.985L575.587 25.0752L673.409 625.982Z" stroke="#000000" strokeWidth={boundaryStrokeWidth} fill="none" vectorEffect="non-scaling-stroke"/>
 <Rect id="1" x="1973" y="567.5" width="24" height="29" fill={getNodeFill('1')}/>
 <Rect id="2" x="1973" y="537.5" width="24" height="28" fill={getNodeFill('2')}/>
 <Rect id="3" x="1973" y="507.5" width="24" height="28" fill={getNodeFill('3')}/>

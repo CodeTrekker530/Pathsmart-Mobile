@@ -103,6 +103,7 @@ export default function ShoppingList() {
   }, [params.search]);
   const [searchResults, setSearchResults] = useState([]);
   const [listItems, setListItems] = useState([]);
+  const [selectedSearchItems, setSelectedSearchItems] = useState(new Set()); // Track items in search results
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const drawX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
@@ -203,11 +204,36 @@ export default function ShoppingList() {
   };
 
   const addToList = (item) => {
-    if (!listItems.some(i => i.id === item.id)) {
-      const newList = [...listItems, item];
+    const isCurrentlySelected = selectedSearchItems.has(item.id);
+    
+    if (isCurrentlySelected) {
+      // Remove from list if currently selected
+      const newList = listItems.filter(i => i.id !== item.id);
       setListItems(newList);
       saveShoppingList(newList);
+    } else {
+      // Add to list if not selected
+      if (!listItems.some(i => i.id === item.id)) {
+        const newList = [...listItems, item];
+        setListItems(newList);
+        saveShoppingList(newList);
+      }
     }
+    
+    // Toggle selected state in search results
+    const newSelected = new Set(selectedSearchItems);
+    if (newSelected.has(item.id)) {
+      newSelected.delete(item.id);
+    } else {
+      newSelected.add(item.id);
+    }
+    setSelectedSearchItems(newSelected);
+  };
+
+  const directSearch = (item) => {
+    // Navigate to pathfinder with just this one product
+    saveShoppingList([item]);
+    router.push('/pathfinder');
   };
 
   const removeFromList = (id) => {
@@ -215,6 +241,12 @@ export default function ShoppingList() {
     setListItems(newList);
     saveShoppingList(newList);
   };
+
+  // Sync selectedSearchItems with listItems
+  useEffect(() => {
+    const listItemIds = new Set(listItems.map(i => i.id));
+    setSelectedSearchItems(listItemIds);
+  }, [listItems]);
 
   // Load saved list on mount (AsyncStorage)
   useEffect(() => {
@@ -289,22 +321,33 @@ export default function ShoppingList() {
           <FlatList
             data={filteredResults}
             keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultRow}
-                onPress={() => addToList(item)}
-              >
-                <Image
-                  source={imageMap[item.image] || imageMap["image.png"]}
-                  style={styles.itemImage}
-                />
-                <View style={styles.itemInfo}>
-                  <Text style={styles.resultText}>{item.name}</Text>
-                  <Text style={styles.itemCategory}>{item.category}</Text>
+            renderItem={({ item }) => {
+              const isSelected = selectedSearchItems.has(item.id);
+              return (
+                <View style={styles.resultRow}>
+                  <TouchableOpacity
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+                    onPress={() => directSearch(item)}
+                  >
+                    <Image
+                      source={imageMap[item.image] || imageMap["image.png"]}
+                      style={styles.itemImage}
+                    />
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.resultText}>{item.name}</Text>
+                      <Text style={styles.itemCategory}>{item.category}</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ marginRight: 10 }} onPress={() => addToList(item)}>
+                    <Ionicons 
+                      name={isSelected ? "remove-circle" : "add-circle-outline"} 
+                      size={30} 
+                      color={isSelected ? "#d33" : "#249B3E"} 
+                    />
+                  </TouchableOpacity>
                 </View>
-                <Ionicons name="add-circle-outline" size={22} color="#249B3E" />
-              </TouchableOpacity>
-            )}
+              );
+            }}
             ListEmptyComponent={
               <Text style={styles.emptyText}>No results found.</Text>
             }
