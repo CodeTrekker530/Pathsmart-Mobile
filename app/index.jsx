@@ -75,7 +75,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1}}
         showsVerticalScrollIndicator={false}
       >
         {/* Middle Section - App Description & Tutorial Button */}

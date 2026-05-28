@@ -113,6 +113,7 @@ class PathfinderController {
              * @returns {{stallId: string, endNode: number, cost: number, path: number[]}}
              */
     findClosestStallAndEndNode(startNodeId, id) {
+      const startTime = performance.now();
       id = String(id);
       let minCost = Infinity;
       let bestStallId = null;
@@ -161,12 +162,27 @@ class PathfinderController {
           }
         }
       }
-      console.log('[findClosestStallAndEndNode] result:', {
-        stallId: bestStallId,
-        endNode: bestEndNode,
-        cost: minCost,
-        path: bestPath
-      });
+      // Calculate total distance in pixels for the best path
+      let totalDistancePx = 0;
+      for (let i = 0; i < bestPath.length - 1; i++) {
+        const node1 = this.nodes[String(bestPath[i])];
+        const node2 = this.nodes[String(bestPath[i + 1])];
+        if (node1 && node2) {
+          const dx = node1.x - node2.x;
+          const dy = node1.y - node2.y;
+          totalDistancePx += Math.sqrt(dx * dx + dy * dy);
+        }
+      }
+      
+      const endTime = performance.now();
+      const timeElapsed = (endTime - startTime).toFixed(2);
+      
+      // Log only the final chosen path
+      if (bestPath.length > 0) {
+        const nodesTraversedCount = bestPath.length;
+        console.log(`[Pathfinder] Path created from ${startNodeId} to ${bestEndNode} - Time: ${timeElapsed}ms, Nodes traversed: ${nodesTraversedCount}, Distance: ${totalDistancePx.toFixed(2)}px, Path length: ${bestPath.length}`);
+      }
+      
       return {
         stallId: bestStallId,
         endNode: bestEndNode,
@@ -252,7 +268,6 @@ class PathfinderController {
     this.nodes = nodesData.nodes;
     this.connections = connectionsData.connections;
     this.saveData = { stalls: getAllStallsWithProducts() };
-    console.log("[PathfinderController] Loaded stalls:", this.saveData.stalls);
     this.resetState();
   }
 
@@ -300,6 +315,9 @@ class PathfinderController {
 
   findPath(startId, endId) {
     // A* algorithm with Euclidean heuristic
+    const startTime = performance.now();
+    let nodesTraversed = 0;
+
     function euclidean(a, b) {
       const nodeA = this.nodes[String(a)];
       const nodeB = this.nodes[String(b)];
@@ -316,6 +334,7 @@ class PathfinderController {
     while (frontier.length > 0) {
       frontier.sort((a, b) => a[0] - b[0]);
       const [, , current] = frontier.shift(); // Only use 'current'
+      nodesTraversed++;
       if (current === endId) break;
       for (const [nextStr, distance] of Object.entries(this.getNeighbors(current))) {
         const nextNode = parseInt(nextStr, 10);

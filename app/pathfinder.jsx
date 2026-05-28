@@ -9,7 +9,6 @@ import MapSVG from './utils/MapSVG';
 import SearchBar from './components/searchBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCodeScanner from './utils/QRCodeScanner';
-import nodesData from './utils/f1nodes.json';
 
 const checkboxOutlinePng = require('./assets/CheckboxOutline.png');
 const checkboxFilledPng = require('./assets/CheckboxFilled.png');
@@ -325,42 +324,6 @@ export default function HomeScreen() {
     rotation.value = withSpring(0);
   };
 
-  // Recenter - move to start point and zoom
-  const recenter = () => {
-    if (!startNodeId) {
-      Alert.alert('No Start Point', 'Please set a starting location first.');
-      return;
-    }
-
-    const nodes = nodesData.nodes;
-    const startNode = nodes[String(startNodeId)];
-    
-    if (!startNode) return;
-
-    // SVG dimensions and viewBox
-    const viewBoxWidth = 2022;
-    const viewBoxHeight = 629;
-    const mapWidth = screenWidth;
-    const mapHeight = screenHeight - 200; // Approximate map area height
-
-    // Calculate center of screen in SVG coordinates
-    const screenCenterX = viewBoxWidth / 2;
-    const screenCenterY = viewBoxHeight / 2;
-
-    // Calculate translation to center start point
-    const offsetX = (mapWidth / 2) / (scale.value / MAP_RENDER_SCALE);
-    const offsetY = (mapHeight / 2) / (scale.value / MAP_RENDER_SCALE);
-
-    lastTranslateX.value = withSpring(offsetX - startNode.x);
-    translateX.value = withSpring(offsetX - startNode.x);
-    lastTranslateY.value = withSpring(offsetY - startNode.y);
-    translateY.value = withSpring(offsetY - startNode.y);
-
-    // Zoom in a bit (1.5x)
-    scaleOffset.value = withSpring(1.5);
-    scale.value = withSpring(1.5);
-  };
-
   // Animated style
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -537,9 +500,6 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.mapControlButton} onPress={findNorth}>
           <Ionicons name="compass" size={20} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.mapControlButton} onPress={recenter}>
-          <Ionicons name="locate" size={20} color="white" />
-        </TouchableOpacity>
       </View>
       {/* Pinpoint mode overlay - centered above map, outside pan/zoom wrapper */}
       {pinpointMode && (
@@ -710,9 +670,6 @@ export default function HomeScreen() {
               onPress={() => setDeleteMode((prev) => !prev)}
             >
               <Ionicons name="trash" size={20} color="white" />
-              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15 }}>
-                {deleteMode ? 'Cancel' : 'Delete Items'}
-              </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

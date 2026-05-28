@@ -22,7 +22,7 @@
         "foregroundImage": "app/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "package": "com.yourcompany.yourapp"
     },
     "web": {

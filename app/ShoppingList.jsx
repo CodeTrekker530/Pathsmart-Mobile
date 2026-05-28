@@ -154,7 +154,7 @@ export default function ShoppingList() {
         (!searchLower) // Show all if search is empty
       ) {
         results.push({
-          id: product.id,
+          id: `p${product.id}`,
           name: product.name,
           category: product.category,
           type: 'Product',
