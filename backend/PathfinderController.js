@@ -122,6 +122,9 @@ class PathfinderController {
       if (id.startsWith('p')) {
         // Product ID: find closest stall selling this product
         for (const [stallId, stallData] of Object.entries(this.saveData.stalls)) {
+          // Skip visited stalls
+          if (this.visitedStalls.has(stallId)) continue;
+          
           if ((stallData.products || []).includes(id)) {
             for (const endNode of stallData.stall_endNode || []) {
               const path = this.findPath(startNodeId, endNode);

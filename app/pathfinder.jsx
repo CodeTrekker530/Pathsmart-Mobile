@@ -205,6 +205,8 @@ export default function HomeScreen() {
   // Selected product index for info row
   const [selectedProductIndex, setSelectedProductIndex] = React.useState(0);
   const [deleteMode, setDeleteMode] = React.useState(false);
+  // Track visited stalls for "try next" functionality
+  const [visitedStalls, setVisitedStalls] = React.useState(new Set());
 
   // Load shopping list from AsyncStorage on mount
   React.useEffect(() => {
@@ -218,6 +220,14 @@ export default function HomeScreen() {
     };
     loadShoppingList();
   }, []);
+
+  // Reset visited stalls when product changes
+  React.useEffect(() => {
+    if (PathfinderController.current) {
+      PathfinderController.current.visitedStalls.clear();
+      setVisitedStalls(new Set());
+    }
+  }, [selectedProductIndex]);
 
   // Toggle checkbox
   const toggleChecked = (id) => {
@@ -428,6 +438,45 @@ export default function HomeScreen() {
     });
   };
 
+  // Handle "try next" button - find next closest stall with same product
+  const handleTryNext = () => {
+    if (!selectedProduct || !startNodeId || !closestEndNode) {
+      Alert.alert('No Route', 'Cannot find alternative stalls at this time.');
+      return;
+    }
+
+    const controller = PathfinderController.current;
+    const normalizedProductId = normalizeId(selectedProduct.id);
+
+    // Get all stalls selling the current product
+    const stallIds = controller.getStallsForProduct(normalizedProductId);
+    
+    if (stallIds.length <= 1) {
+      Alert.alert('No Alternatives', 'This product is only available at one stall.');
+      return;
+    }
+
+    // Find which stall the current closest end node belongs to
+    const currentStallId = controller.getStallFromStall_endNode(closestEndNode);
+    
+    // Mark current stall as visited in the controller
+    if (currentStallId) {
+      controller.visitedStalls.add(currentStallId);
+    }
+
+    // Check if there are any unvisited stalls left
+    const unvisitedStalls = stallIds.filter(id => !controller.visitedStalls.has(id));
+    if (unvisitedStalls.length === 0) {
+      Alert.alert('No More Stalls', 'All stalls with this product have been tried.');
+      return;
+    }
+
+    // Swap: current destination becomes new start point
+    suppressReorderRef.current = true;
+    setStartNodeId(closestEndNode);
+    // The useEffect will automatically find the path to the next closest unvisited stall from this new start point
+  };
+
   return (
     <View style={styles.container}>
       {/* Floating Top HUD */}
@@ -596,7 +645,7 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.navButton} onPress={goToNextProduct}>
                   <Ionicons name="caret-forward" size={30} color="white" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.tryNextButton}>
+                <TouchableOpacity style={styles.tryNextButton} onPress={handleTryNext}>
                   <Image source={require('./assets/try_next.png')} style={styles.tryNextImage} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.checkButton} onPress={() => selectedProduct && markAndAdvance(selectedProduct.id, 'check')}>

@@ -87,7 +87,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.yourcompany.yourapp'
+    namespace "com.pathsmart"
     defaultConfig {
         applicationId 'com.yourcompany.yourapp'
         minSdkVersion rootProject.ext.minSdkVersion
