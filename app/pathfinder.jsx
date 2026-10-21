@@ -9,6 +9,7 @@ import MapSVG from './utils/MapSVG';
 import SearchBar from './components/searchBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCodeScanner from './utils/QRCodeScanner';
+import MarqueeText from './components/MarqueeText';
 
 const checkboxOutlinePng = require('./assets/CheckboxOutline.png');
 const checkboxFilledPng = require('./assets/CheckboxFilled.png');
@@ -399,20 +400,6 @@ export default function HomeScreen() {
   // Get selected product id (number or string)
   const selectedProductId = selectedProduct ? selectedProduct.id : null;
 
-  // Navigation handlers
-  const goToPrevProduct = () => {
-    setSelectedProductIndex((prev) => {
-      if (shoppingList.length === 0) return 0;
-      return (prev - 1 + shoppingList.length) % shoppingList.length;
-    });
-  };
-  const goToNextProduct = () => {
-    setSelectedProductIndex((prev) => {
-      if (shoppingList.length === 0) return 0;
-      return (prev + 1) % shoppingList.length;
-    });
-  };
-
   // Remove item from shopping list
   const removeItem = (id) => {
     setShoppingList((prev) => {
@@ -630,21 +617,15 @@ export default function HomeScreen() {
           <View style={styles.listController}>
             <View style={styles.productInfoRow}>
               <Image source={require('./assets/image.png')} style={styles.productImage} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.productName, xItems[selectedProduct?.id] && { textDecorationLine: 'line-through', color: '#d33' }]}> {/* Bigger font size */}
+              <View style={{ flex: 1, justifyContent: 'center' }}>
+                <MarqueeText style={[styles.productName, xItems[selectedProduct?.id] && { textDecorationLine: 'line-through', color: '#d33' }]}>
                   {selectedProduct ? selectedProduct.name : 'No Product'}
-                </Text>
+                </MarqueeText>
                 <Text style={[styles.productCategory]}> {/* Category below name */}
                   {selectedProduct ? selectedProduct.category : ''}
                 </Text>
               </View>
               <View style={styles.productButtons}>
-                <TouchableOpacity style={styles.navButton} onPress={goToPrevProduct}>
-                  <Ionicons name="caret-back" size={30} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navButton} onPress={goToNextProduct}>
-                  <Ionicons name="caret-forward" size={30} color="white" />
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.tryNextButton} onPress={handleTryNext}>
                   <Image source={require('./assets/try_next.png')} style={styles.tryNextImage} />
                 </TouchableOpacity>
@@ -664,13 +645,15 @@ export default function HomeScreen() {
               {shoppingList.length === 0 ? (
                 <Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>No items in your list.</Text>
               ) : (
-                shoppingList.map((item) => (
+                shoppingList.map((item, index) => (
                   <TouchableOpacity
                     key={item.id}
                     style={styles.shoppingListItemRow}
                     onPress={() => {
                       if (deleteMode) {
                         removeItem(item.id);
+                      } else {
+                        setSelectedProductIndex(index);
                       }
                     }}
                     activeOpacity={deleteMode ? 0.6 : 1}
@@ -680,10 +663,10 @@ export default function HomeScreen() {
                       style={styles.shoppingListItemImage}
                     />
                     <View style={styles.shoppingListItemInfo}>
-                      <Text style={[
+                      <MarqueeText style={[
                         styles.shoppingListItemText,
                         xItems[item.id] && { textDecorationLine: 'line-through', color: '#d33' }
-                      ]}>{item.name}</Text>
+                      ]} containerStyle={{ flex: 1 }}>{item.name}</MarqueeText>
                       <Text style={styles.shoppingListItemCategory}>{item.category}</Text>
                     </View>
                     {deleteMode ? (
